@@ -32,9 +32,23 @@ void GameObject::Render(ComPtr<ID3D11DeviceContext>& context)
 			context->DrawIndexed(mesh->indexCount, 0, 0);
 		}
 	}
-	
-	
-		
+}
+
+void GameObject::RenderUseCustomPSO(ComPtr<ID3D11DeviceContext>& context)
+{
+	if (m_Active == true && m_PSO != nullptr && m_Model != nullptr)
+	{
+		if (m_Transform != nullptr)
+		{
+			m_Transform->SetTransformCBuffer(context);
+		}
+		for (const auto& mesh : m_Model->m_meshes)
+		{
+			context->IASetVertexBuffers(0, 1, mesh->vertexBuffer.GetAddressOf(), &mesh->stride, &mesh->offset);
+			context->IASetIndexBuffer(mesh->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+			context->DrawIndexed(mesh->indexCount, 0, 0);
+		}
+	}
 }
 //void GameObject::UpdateVSCBuffer(ID3D11DeviceContext* pContext, const Matrix& MatView, const Matrix& MatProj)
 //{

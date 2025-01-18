@@ -14,6 +14,7 @@ enum E_MatKind
 	PBR,
 	BlinnPhong,
 	Skybox,
+	MousePicking,
 };
 struct MaterialCBuffer
 {
@@ -38,6 +39,12 @@ __declspec(align(256)) struct BlinnPhongCBuffer : MaterialCBuffer
 	float dummy;
 	Vector3 specular;
 	float dummy2;
+};
+
+__declspec(align(256)) struct MousePickingCBuffer : MaterialCBuffer
+{
+	Vector3 color;
+	int idx;
 };
 
 __declspec(align(256)) struct SkyboxCBuffer : MaterialCBuffer

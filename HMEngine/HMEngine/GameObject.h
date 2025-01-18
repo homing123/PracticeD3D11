@@ -19,6 +19,7 @@ public:
 
 	Transform* GetPTransform() const;
 	void Render(ComPtr<ID3D11DeviceContext>& context);
+	void RenderUseCustomPSO(ComPtr<ID3D11DeviceContext>& context);
 
 	bool m_Active = true;
 	GraphicsPSO* m_PSO = nullptr;

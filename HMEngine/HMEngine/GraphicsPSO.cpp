@@ -17,6 +17,9 @@ void GraphicsPSO::SetMatKindAndCreateCBuffer(ComPtr<ID3D11Device>& device, E_Mat
 	case E_MatKind::Skybox:
 		D3DUtil::CreateCBuffer(device, *static_cast<SkyboxCBuffer*>(m_MaterialCBufferCPU), m_MaterialCBufferGPU);
 		break;
+	case E_MatKind::MousePicking:
+		D3DUtil::CreateCBuffer(device, *static_cast<MousePickingCBuffer*>(m_MaterialCBufferCPU), m_MaterialCBufferGPU);
+		break;
 	}
 }
 
@@ -51,6 +54,9 @@ void GraphicsPSO::UpdateMatCBuffer(ComPtr<ID3D11DeviceContext>& context)
 		break;
 	case E_MatKind::Skybox:
 		D3DUtil::UpdateCBuffer(context, *static_cast<SkyboxCBuffer*>(m_MaterialCBufferCPU), m_MaterialCBufferGPU);
+		break;
+	case E_MatKind::MousePicking:
+		D3DUtil::UpdateCBuffer(context, *static_cast<MousePickingCBuffer*>(m_MaterialCBufferCPU), m_MaterialCBufferGPU);		
 		break;
 	}
 }

@@ -35,5 +35,6 @@ public:
 	void SetMatKindAndCreateCBuffer(ComPtr<ID3D11Device>& device, E_MatKind matKind, MaterialCBuffer* pMatCBuffer);
 	void RenderSetting(ComPtr<ID3D11DeviceContext>& context);
 	void UpdateMatCBuffer(ComPtr<ID3D11DeviceContext>& context);
+
 	//void operator=(const GraphicsPSO& pso);
 };

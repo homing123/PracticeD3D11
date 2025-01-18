@@ -133,6 +133,9 @@
     <FxCompile Include="VSSkybox.hlsl">
       <Filter>hlsl</Filter>
     </FxCompile>
+    <FxCompile Include="PSMousePicking.hlsl">
+      <Filter>hlsl</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Common.hlsli">

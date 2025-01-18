@@ -3,6 +3,7 @@
 const float PI = 3.14159265f;
 const float ToDegree = 180 / PI;
 const float ToRadian = PI / 180;
+const bool EditMode = true;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -121,10 +122,10 @@ void App::Render()
 
 
 	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	m_Context->ClearRenderTargetView(m_RenderTargetView.Get(), clearColor);
-	m_Context->ClearDepthStencilView(m_DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
+	m_Context->ClearRenderTargetView(m_MainRTV.Get(), clearColor);
+	m_Context->ClearDepthStencilView(m_MainDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
 
-	m_Context->OMSetRenderTargets(1, m_RenderTargetView.GetAddressOf(), m_DepthStencilView.Get());
+	m_Context->OMSetRenderTargets(1, m_MainRTV.GetAddressOf(), m_MainDSV.Get());
 	
 	//IBLTexture
 
@@ -143,8 +144,26 @@ void App::Render()
 
 	//post processing
 
+	//Mouse Picking
+	if (EditMode)
+	{
+		m_Context->ClearRenderTargetView(m_MousePickingRTV.Get(), clearColor);
+		m_Context->ClearDepthStencilView(m_MousePickingDSV.Get(), D3D11_CLEAR_DEPTH, 1.f, 0);
+		m_Context->OMSetRenderTargets(1, m_MousePickingRTV.GetAddressOf(), m_MousePickingDSV.Get());
+		MousePickingPSO.RenderSetting(m_Context);
+		MousePickingCBuffer* cbufferCPU = static_cast<MousePickingCBuffer*>(MousePickingPSO.m_MaterialCBufferCPU);
+		for (int i = 0; i < objCount; i++)
+		{
+			cbufferCPU->idx = i;
+			float r = i / (256.0f * 256.0f);
+			float g = i / 256.0f;
+			float b = i / 255.0f;
+			cbufferCPU->color = 
 
-	//cubeMap
+			GameObject* pGO = m_Objs[i].get();
+			pGO->RenderUseCustomPSO(m_Context);
+		}
+	}
 
 	//ID3D11ShaderResourceView* arr_pView[1] = { m_CubeMap.m_SpecularResourceView.Get()};
 	//m_Context->IASetInputLayout(m_CubeMap.m_InputLayout.Get());
@@ -376,16 +395,30 @@ LRESULT CALLBACK App::MsgProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam
 			m_ScreenWidth = width;
 			m_ScreenHeight = height;
 			m_Cam.ChangeScreenSize(m_ScreenWidth, m_ScreenHeight);
-			m_RenderTargetView.Reset();
-			m_ShaderResourceView.Reset();
+
+			m_MainRTV.Reset();
+			m_MainSRV.Reset();
+			m_MainDSV.Reset();
+
+			if (EditMode) 
+			{
+				m_MousePickingRTV.Reset();
+				m_MousePickingSRV.Reset();
+				m_MousePickingDSV.Reset();
+			}
+
 			m_SwapChain->ResizeBuffers(0, //현재 갯수 유지
 				m_ScreenWidth, m_ScreenHeight, DXGI_FORMAT_UNKNOWN, //현재 포멧 유지
 				0);
 
 			D3DUtil::SetViewport(m_Context, m_ScreenViewport, m_ScreenWidth, m_ScreenHeight);
-			D3DUtil::CreateRenderTargetShaderResourceView(m_Device, m_SwapChain, m_RenderTargetView, m_ShaderResourceView);
-			m_DepthStencilView.Get()->Release();
-			D3DUtil::CreateDepthBuffer(m_Device, m_DepthStencilView, m_ScreenWidth, m_ScreenHeight, numQualityLevels);
+			D3DUtil::CreateRenderTargetShaderResourceView(m_Device, m_SwapChain, m_MainRTV, m_MainSRV);
+			D3DUtil::CreateDepthBuffer(m_Device, m_MainDSV, m_ScreenWidth, m_ScreenHeight, numQualityLevels);
+			if (EditMode)
+			{
+				D3DUtil::CreateRenderTargetShaderResourceView(m_Device, m_SwapChain, m_MousePickingRTV, m_MousePickingSRV);
+				D3DUtil::CreateDepthBuffer(m_Device, m_MousePickingDSV, m_ScreenWidth, m_ScreenHeight, numQualityLevels);
+			}
 
 			//카메라 정보 설정
 		}
@@ -557,8 +590,14 @@ bool App::InitDirect3D()
 	}
 
 	D3DUtil::SetViewport(m_Context, m_ScreenViewport, m_ScreenWidth, m_ScreenHeight);
-	if (!D3DUtil::CreateRenderTargetShaderResourceView(m_Device, m_SwapChain, m_RenderTargetView, m_ShaderResourceView)) { return false; }
-	if (!D3DUtil::CreateDepthBuffer(m_Device, m_DepthStencilView, m_ScreenWidth, m_ScreenHeight, numQualityLevels)) { return false; }
+	if (!D3DUtil::CreateRenderTargetShaderResourceView(m_Device, m_SwapChain, m_MainRTV, m_MainSRV)) { return false; }
+	if (!D3DUtil::CreateDepthBuffer(m_Device, m_MainDSV, m_ScreenWidth, m_ScreenHeight, numQualityLevels)) { return false; }
+
+	if (EditMode)
+	{
+		if (!D3DUtil::CreateRenderTargetShaderResourceView(m_Device, m_SwapChain, m_MousePickingRTV, m_MousePickingSRV)) { return false; }
+		if (!D3DUtil::CreateDepthBuffer(m_Device, m_MousePickingDSV, m_ScreenWidth, m_ScreenHeight, 0)) { return false; }
+	}
 
 	D3DUtil::CreateCBuffer(m_Device, m_GlobalCBufferCPU, m_GlobalCBufferGPU);
 

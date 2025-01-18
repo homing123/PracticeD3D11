@@ -13,6 +13,7 @@ namespace Graphics
 
 	ComPtr<ID3D11DepthStencilState> BasicDSS;
 	ComPtr<ID3D11DepthStencilState> SkyboxDSS;
+	ComPtr<ID3D11DepthStencilState> MousePickingDSS;
 
 	ComPtr<ID3D11InputLayout> BasicMeshInputLayout;
 	ComPtr<ID3D11InputLayout> SkyboxInputLayout;
@@ -24,15 +25,20 @@ namespace Graphics
 
 	ComPtr<ID3D11PixelShader> BlinnPhongPS;
 	ComPtr<ID3D11PixelShader> SkyboxPS;
+	ComPtr<ID3D11PixelShader> MousePickingPS;
 
 	BlinnPhongCBuffer BlinnPhongMatCBuffer_0;
 	BlinnPhongCBuffer BlinnPhongMatCBuffer_1;
 	SkyboxCBuffer SkyboxMatCBuffer;
+	MousePickingCBuffer MousePickingMatCBuffer;
+
 
 	GraphicsPSO BlinnPhongPSO_0;
 	GraphicsPSO BlinnPhongPSO_1;
 	GraphicsPSO SkyboxPSO;
 	GraphicsPSO PBRPSO;
+	GraphicsPSO MousePickingPSO;
+
 }
 
 void Graphics::InitGraphics(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context)
@@ -95,6 +101,8 @@ void Graphics::InitDepthStencilState(ComPtr<ID3D11Device>& device)
 	desc.StencilEnable = false;
 	ThrowFail(device->CreateDepthStencilState(&desc, BasicDSS.GetAddressOf()));
 
+	ThrowFail(device->CreateDepthStencilState(&desc, MousePickingDSS.GetAddressOf()));
+
 	desc.DepthEnable = false;
 	desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	desc.DepthFunc = D3D11_COMPARISON_NEVER;
@@ -131,6 +139,7 @@ void Graphics::InitShaders(ComPtr<ID3D11Device>& device)
 	
 	D3DUtil::CreatePixelShader(device, L"PSBlinnPhong.hlsl", BlinnPhongPS);
 	D3DUtil::CreatePixelShader(device, L"PSSkybox.hlsl", SkyboxPS);
+	D3DUtil::CreatePixelShader(device, L"PSMousePicking.hlsl", MousePickingPS);
 }
 void Graphics::InitMaterial()
 {
@@ -165,5 +174,10 @@ void Graphics::InitPSO(ComPtr<ID3D11Device>& device)
 	SkyboxPSO.m_DepthStensilState = SkyboxDSS;
 	SkyboxPSO.SetMatKindAndCreateCBuffer(device, E_MatKind::Skybox, &SkyboxMatCBuffer);
 
-
+	MousePickingPSO.m_VS = BasicMeshVS;
+	MousePickingPSO.m_PS = MousePickingPS;
+	MousePickingPSO.m_InputLayout = BasicMeshInputLayout;
+	MousePickingPSO.m_RasterState = SolidCWRS;
+	MousePickingPSO.m_DepthStensilState = MousePickingDSS;
+	MousePickingPSO.SetMatKindAndCreateCBuffer(device, E_MatKind::MousePicking, &MousePickingMatCBuffer);
 }
