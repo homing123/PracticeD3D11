@@ -14,6 +14,7 @@ class GameObject
 public:
 	GameObject() {};
 	GameObject(ComPtr<ID3D11Device>& device, const string& name, Model* pModel, GraphicsPSO* pPSO);
+	string m_Name;
 	size_t m_NameKey = 0;
 
 	Transform* GetPTransform() const;

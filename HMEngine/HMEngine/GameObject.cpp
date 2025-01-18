@@ -3,6 +3,7 @@
 
 GameObject::GameObject(ComPtr<ID3D11Device>& device, const string& name, Model* pModel, GraphicsPSO* pPSO)
 {
+	m_Name = name;
 	m_Transform = make_shared<Transform>(device);
 	m_NameKey = std::hash<string>()(name);
 	m_Model = pModel;

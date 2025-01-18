@@ -122,7 +122,7 @@ bool D3DUtil::CreateDepthBuffer(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Depth
 	}
 	return true;
 }
-void D3DUtil::SetViewport(ID3D11DeviceContext* pContext, D3D11_VIEWPORT& screenViewport, const UINT width, const UINT height)
+void D3DUtil::SetViewport(ComPtr<ID3D11DeviceContext>& context, D3D11_VIEWPORT& screenViewport, const UINT width, const UINT height)
 {
 	ZeroMemory(&screenViewport, sizeof(screenViewport));
 	screenViewport.Width = width;
@@ -131,7 +131,7 @@ void D3DUtil::SetViewport(ID3D11DeviceContext* pContext, D3D11_VIEWPORT& screenV
 	screenViewport.TopLeftY = 0;
 	screenViewport.MinDepth = 0.f;
 	screenViewport.MaxDepth = 1.f;
-	pContext->RSSetViewports(1, &screenViewport);
+	context->RSSetViewports(1, &screenViewport);
 }
 void D3DUtil::CreateVertexShaderAndInputLayout(ComPtr<ID3D11Device>& device, const wstring& fileName, const vector<D3D11_INPUT_ELEMENT_DESC>& inputElements, ComPtr<ID3D11VertexShader>& vertexShader, ComPtr<ID3D11InputLayout>& inputLayout)
 {

@@ -29,81 +29,19 @@ void App::Start()
 	m_Skybox.m_Model = new Model(m_Device, m_Context, { MeshFactory::CreateBox(40) });
 	m_Skybox.m_PSO = &SkyboxPSO;
 
-	D3D11_SHADER_RESOURCE_VIEW_DESC desc;
-	ComPtr<ID3D11Texture2D> texture;
-	m_EnvIBLSRV.Get()->GetResource((ID3D11Resource**)texture.GetAddressOf());
-	D3D11_TEXTURE2D_DESC desc2d;
-	texture.Get()->GetDesc(&desc2d);
-	UINT width = desc2d.Width;
-
-	
 	//카메라 정보 설정
 	m_Cam.ChangeScreenSize(m_ScreenWidth, m_ScreenHeight);
 	m_Cam.GetPTransform()->SetPosition(Vector3(0, 0, -5));
-
-
-
-	//m_CubeMap.Init(m_Device.Get());
-
-	////postprocessing 
-
-	//m_Filters.clear();
-	//auto copyFilter = make_shared<ImageFilter>();
-	//copyFilter->Init(m_Device.Get(), m_Context.Get(), GetMesh(ImageFilter::MeshName), L"PSSampling.hlsl", m_ScreenWidth, m_ScreenHeight);
-	//copyFilter->SetShaderResources({ m_ShaderResourceView });
-	//m_Filters.push_back(copyFilter);
-
-	//auto bloomSampleFilter = make_shared<ImageFilter>();
-	//bloomSampleFilter->Init(m_Device.Get(), m_Context.Get(), GetMesh(ImageFilter::MeshName), L"PSSampling.hlsl", m_ScreenWidth, m_ScreenHeight);
-	//bloomSampleFilter->SetShaderResources({ m_ShaderResourceView });
-	//m_Filters.push_back(bloomSampleFilter);
-
-	//int width = m_ScreenWidth;
-	//int height = m_ScreenHeight;
-
-	////다운샘플링
-	//for (int i = 0; i < 4; i++)
-	//{
-	//	width /= 2;
-	//	height /= 2;
-	//	auto filter = make_shared<ImageFilter>();
-	//	filter->Init(m_Device.Get(), m_Context.Get(), GetMesh(ImageFilter::MeshName), L"PSSampling.hlsl", width, height);
-	//	filter->SetShaderResources({ m_Filters.back().get()->m_ShaderResourceView });
-	//	m_Filters.push_back(filter);
-	//}
-
-	////블러 및 업샘플링
-	//for (int i = 0; i < 4; i++)
-	//{
-	//	auto filter = make_shared<ImageFilter>();
-	//	filter.get()->Init(m_Device.Get(), m_Context.Get(), GetMesh(ImageFilter::MeshName), L"PSBlurX.hlsl", width, height);
-	//	filter.get()->SetShaderResources({ m_Filters.back().get()->m_ShaderResourceView });
-	//	m_Filters.push_back(filter);
-
-	//	filter = make_shared<ImageFilter>();
-	//	filter.get()->Init(m_Device.Get(), m_Context.Get(), GetMesh(ImageFilter::MeshName), L"PSBlurY.hlsl", width, height);
-	//	filter.get()->SetShaderResources({ m_Filters.back().get()->m_ShaderResourceView });
-	//	m_Filters.push_back(filter);
-	//	width *= 2;
-	//	height *= 2;
-
-	//	filter = make_shared<ImageFilter>();
-	//	filter->Init(m_Device.Get(), m_Context.Get(), GetMesh(ImageFilter::MeshName), L"PSSampling.hlsl", width, height);
-	//	filter->SetShaderResources({ m_Filters.back().get()->m_ShaderResourceView });
-	//	m_Filters.push_back(filter);
-	//}
-
-	//auto finalFilter = make_shared<ImageFilter>();
-	//finalFilter.get()->Init(m_Device.Get(), m_Context.Get(), GetMesh(ImageFilter::MeshName), L"PSCombine.hlsl", m_ScreenWidth, m_ScreenHeight);
-	//finalFilter.get()->SetShaderResources({ copyFilter->m_ShaderResourceView, m_Filters.back().get()->m_ShaderResourceView });
-	//finalFilter.get()->SetRenderTargets({ m_RenderTargetView });
-	//m_Filters.push_back(finalFilter);
 
 }
 void App::UpdateGUI()
 {
 	//rendering option
 	ImGui::Checkbox("MoveMode", &m_MoveMode);
+	if (pSelectObj != nullptr)
+	{
+		ImGui::TreeNode(pSelectObj->m_Name.c_str());
+	}
 	
 }
 void App::Update(const float deltaTime)
@@ -149,7 +87,6 @@ void App::Update(const float deltaTime)
 		}
 		Vector2 mouseMove = GetMouseMove();
 		float camRotSpeed = 360.0f;
-		cout << mouseMove.x << mouseMove.y << endl;
 		Vector3 euler = pCamTF->GetRotation().ToEuler();
 		if (mouseMove.y != 0 || mouseMove.x != 0)
 		{
@@ -440,16 +377,14 @@ LRESULT CALLBACK App::MsgProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam
 			m_ScreenHeight = height;
 			m_Cam.ChangeScreenSize(m_ScreenWidth, m_ScreenHeight);
 			m_RenderTargetView.Reset();
+			m_ShaderResourceView.Reset();
 			m_SwapChain->ResizeBuffers(0, //현재 갯수 유지
 				m_ScreenWidth, m_ScreenHeight, DXGI_FORMAT_UNKNOWN, //현재 포멧 유지
 				0);
 
-			/*CreateRenderTargetView();
-			CreateDepthBuffer();
-			SetViewport();*/
-
-			D3DUtil::SetViewport(m_Context.Get(), m_ScreenViewport, m_ScreenWidth, m_ScreenHeight);
+			D3DUtil::SetViewport(m_Context, m_ScreenViewport, m_ScreenWidth, m_ScreenHeight);
 			D3DUtil::CreateRenderTargetShaderResourceView(m_Device, m_SwapChain, m_RenderTargetView, m_ShaderResourceView);
+			m_DepthStencilView.Get()->Release();
 			D3DUtil::CreateDepthBuffer(m_Device, m_DepthStencilView, m_ScreenWidth, m_ScreenHeight, numQualityLevels);
 
 			//카메라 정보 설정
@@ -601,7 +536,7 @@ bool App::InitDirect3D()
 	swapchainDesc.OutputWindow = m_HWND;
 	swapchainDesc.Windowed = true; //창모드 = true, 전체화면 = false
 	swapchainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH; //전체화면 전환시 해상도 관련 뭔가 알잘딱 된다는데 모르겠음
-	swapchainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; //버퍼 그리고 난 후 버퍼내용 폐기
+	swapchainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD; //버퍼 그리고 난 후 버퍼내용 폐기
 	if (numQualityLevels > 0)
 	{
 		swapchainDesc.SampleDesc.Count = 4; //가로2배 세로2배 늘려서 계산 후 보간해서 출력
@@ -621,7 +556,7 @@ bool App::InitDirect3D()
 		return false;
 	}
 
-	D3DUtil::SetViewport(m_Context.Get(), m_ScreenViewport, m_ScreenWidth, m_ScreenHeight);
+	D3DUtil::SetViewport(m_Context, m_ScreenViewport, m_ScreenWidth, m_ScreenHeight);
 	if (!D3DUtil::CreateRenderTargetShaderResourceView(m_Device, m_SwapChain, m_RenderTargetView, m_ShaderResourceView)) { return false; }
 	if (!D3DUtil::CreateDepthBuffer(m_Device, m_DepthStencilView, m_ScreenWidth, m_ScreenHeight, numQualityLevels)) { return false; }
 

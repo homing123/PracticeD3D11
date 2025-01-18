@@ -83,6 +83,8 @@ private:
 	GlobalCBuffer m_GlobalCBufferCPU;
 	ComPtr<ID3D11Buffer> m_GlobalCBufferGPU;
 
+	GameObject* pSelectObj = nullptr;
+
 	bool m_KeyDown[256] = { false };
 	bool m_KeyDown_LastFrame[256] = { false };
 
