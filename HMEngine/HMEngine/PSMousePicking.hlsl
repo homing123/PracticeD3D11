@@ -2,11 +2,11 @@
 
 cbuffer MousePickingCBuffer : register(b0)
 {
-	float3 color;
+	uint3 color;
 	int idx;
 }
 
-float4 main(PSInput i) : SV_TARGET
+uint4 main(PSInput i) : SV_TARGET
 {
-	return float4(color, 1);
+	return uint4(color, 1);
 }

@@ -72,9 +72,9 @@ private:
 	ComPtr<ID3D11DepthStencilView> m_MainDSV;
 	D3D11_VIEWPORT m_ScreenViewport;
 	
+	ComPtr<ID3D11Texture2D> m_MousePickingTex;
 	ComPtr<ID3D11RenderTargetView> m_MousePickingRTV;
-	ComPtr<ID3D11ShaderResourceView> m_MousePickingSRV;
-	ComPtr<ID3D11DepthStencilView> m_MousePickingDSV;
+	ComPtr<ID3D11Texture2D> m_MousePickingStagingTex;
 
 	unordered_map<size_t, unique_ptr<Model>> m_Models;
 	unordered_map<size_t, ComPtr<ID3D11ShaderResourceView>> m_TexViews;

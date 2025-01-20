@@ -69,8 +69,7 @@ public:
 	}
 	static void CreateVertexBuffer(ComPtr<ID3D11Device>& device, const vector<Vertex>& hBuffer, ComPtr<ID3D11Buffer>& dBuffer);
 	static void CreateIndexBuffer(ComPtr<ID3D11Device>& device, const vector<uint32_t>& hBuffer, ComPtr<ID3D11Buffer>& dBuffer);
-	static bool CreateRenderTargetView(ComPtr<ID3D11Device>& device, ComPtr<IDXGISwapChain>& swapChain, ComPtr<ID3D11RenderTargetView>& renderTargetView);
-	static bool CreateRenderTargetShaderResourceView(ComPtr<ID3D11Device>& device, ComPtr<IDXGISwapChain>& swapChain, ComPtr<ID3D11RenderTargetView>& renderTargetView, ComPtr<ID3D11ShaderResourceView>& shaderResourceView);
+	static void CreateMousePickingResources(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Texture2D>& rtvTex, ComPtr<ID3D11RenderTargetView>& rtv, ComPtr<ID3D11Texture2D>& stagingTex, const UINT width, const UINT height);	static bool CreateRenderTargetShaderResourceView(ComPtr<ID3D11Device>& device, ComPtr<IDXGISwapChain>& swapChain, ComPtr<ID3D11RenderTargetView>& renderTargetView, ComPtr<ID3D11ShaderResourceView>& shaderResourceView);
 	static bool CreateDepthBuffer(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DepthStencilView>& depthStencilView, const UINT width, const UINT height, const int qualitylevels);
 	static void SetViewport(ComPtr<ID3D11DeviceContext>& context, D3D11_VIEWPORT& screenViewport, const UINT width, const UINT height);
 	static void CreateVertexShaderAndInputLayout(ComPtr<ID3D11Device>& device, const wstring& fileName, const vector<D3D11_INPUT_ELEMENT_DESC>& inputElements, ComPtr<ID3D11VertexShader>& vertexShader, ComPtr<ID3D11InputLayout>& inputLayout);

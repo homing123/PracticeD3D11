@@ -51,22 +51,6 @@ void D3DUtil::CreateIndexBuffer(ComPtr<ID3D11Device>& device, const vector<uint3
 	}
 }
 
-bool D3DUtil::CreateRenderTargetView(ComPtr<ID3D11Device>& device, ComPtr<IDXGISwapChain>& swapChain, ComPtr<ID3D11RenderTargetView>& renderTargetView)
-{
-	ComPtr<ID3D11Texture2D> backBuffer;
-	swapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf()));
-	if (backBuffer)
-	{
-		device->CreateRenderTargetView(backBuffer.Get(), nullptr, renderTargetView.GetAddressOf());
-	}
-	else
-	{
-		cout << "CreateRenderTargetView failed" << endl;
-		return false;
-	}
-	return true;
-}
-
 bool D3DUtil::CreateRenderTargetShaderResourceView(ComPtr<ID3D11Device>& device, ComPtr<IDXGISwapChain>& swapChain, ComPtr<ID3D11RenderTargetView>& renderTargetView, ComPtr<ID3D11ShaderResourceView>& shaderResourceView)
 {
 	ComPtr<ID3D11Texture2D> backBuffer;
@@ -83,6 +67,40 @@ bool D3DUtil::CreateRenderTargetShaderResourceView(ComPtr<ID3D11Device>& device,
 	}
 	return true;
 }
+
+void D3DUtil::CreateMousePickingResources(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Texture2D>& rtvTex, ComPtr<ID3D11RenderTargetView>& rtv, ComPtr<ID3D11Texture2D>& stagingTex, const UINT width, const UINT height)
+{
+	//RTV
+	D3D11_TEXTURE2D_DESC rtvTexDesc;
+	ZeroMemory(&rtvTexDesc, sizeof(rtvTexDesc));
+	rtvTexDesc.Width = width;
+	rtvTexDesc.Height = height;
+	rtvTexDesc.ArraySize = 1;
+	rtvTexDesc.Format = DXGI_FORMAT_R8G8B8A8_UINT;
+	rtvTexDesc.CPUAccessFlags = 0;
+	rtvTexDesc.MipLevels = 1;
+	rtvTexDesc.Usage = D3D11_USAGE_DEFAULT;
+	rtvTexDesc.BindFlags = D3D11_BIND_RENDER_TARGET;
+	rtvTexDesc.MiscFlags = 0;
+	rtvTexDesc.SampleDesc.Count = 1;
+	rtvTexDesc.SampleDesc.Quality = 0;
+	device->CreateTexture2D(&rtvTexDesc, nullptr, rtvTex.GetAddressOf());
+
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
+	ZeroMemory(&rtvDesc, sizeof(rtvDesc));
+	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UINT;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	//rtvDesc.Buffer = D3D11_BUFFER_RTV();  //ViewDimension ¿Ã 	D3D11_RTV_DIMENSION_BUFFER ¿Œ ∞ÊøÏ¿« ¡§¿«
+	device->CreateRenderTargetView(rtvTex.Get(), &rtvDesc, rtv.GetAddressOf());
+
+
+	//staging Texture
+	rtvTexDesc.Usage = D3D11_USAGE_STAGING;
+	rtvTexDesc.BindFlags = 0; //staging tex
+	rtvTexDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+	device->CreateTexture2D(&rtvTexDesc, nullptr, stagingTex.GetAddressOf());
+}
+
 bool D3DUtil::CreateDepthBuffer(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DepthStencilView>& depthStencilView, const UINT width, const UINT height, const int qualitylevels)
 {
 	//±Ì¿Ã Ω∫≈ŸΩ« ∫‰ ª˝º∫

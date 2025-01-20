@@ -15,6 +15,9 @@ namespace Graphics
 	extern ComPtr<ID3D11DepthStencilState> SkyboxDSS;
 	extern ComPtr<ID3D11DepthStencilState> MousePickingDSS;
 
+	extern ComPtr<ID3D11BlendState> BasicBSS;
+	extern ComPtr<ID3D11BlendState> MousePickingBSS;
+
 	extern ComPtr<ID3D11InputLayout> BasicMeshInputLayout;
 	extern ComPtr<ID3D11InputLayout> SkyboxInputLayout;
 	extern ComPtr<ID3D11InputLayout> SamplingInputLayout;

@@ -43,7 +43,7 @@ __declspec(align(256)) struct BlinnPhongCBuffer : MaterialCBuffer
 
 __declspec(align(256)) struct MousePickingCBuffer : MaterialCBuffer
 {
-	Vector3 color;
+	UINT color[3];
 	int idx;
 };
 

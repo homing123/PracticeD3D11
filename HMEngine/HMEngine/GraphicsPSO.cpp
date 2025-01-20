@@ -33,7 +33,13 @@ void GraphicsPSO::RenderSetting(ComPtr<ID3D11DeviceContext>& context)
 		context->RSSetState(m_RasterState.Get());
 		context->OMSetDepthStencilState(m_DepthStensilState.Get(), m_StencilRef);
 		context->IASetPrimitiveTopology(m_PrimitiveTopology);
-		context->OMSetBlendState(m_BlendState.Get(), m_BlendFactor, 0xffffffff);
+		if (m_BlendState == nullptr) 
+		{
+			context->OMSetBlendState(nullptr, nullptr, 0xffffffff);
+		}
+		else {
+			context->OMSetBlendState(m_BlendState.Get(), m_BlendFactor, 0xffffffff);
+		}
 		context->VSSetShader(m_VS.Get(), 0, 0);
 		context->HSSetShader(m_HS.Get(), 0, 0);
 		context->DSSetShader(m_DS.Get(), 0, 0);

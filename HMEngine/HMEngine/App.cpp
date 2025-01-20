@@ -130,14 +130,14 @@ void App::Render()
 	//IBLTexture
 
 	//스카이박스
-	m_Skybox.Render(m_Context);
+	//m_Skybox.Render(m_Context);
 
 	//기본 오브젝트
 	int objCount = m_Objs.size();
 	for (int i = 0; i < objCount; i++)
 	{
 		GameObject* pGO = m_Objs[i].get();
-		pGO->Render(m_Context);
+		//pGO->Render(m_Context);
 	}
 
 	//post effect
@@ -148,18 +148,17 @@ void App::Render()
 	if (EditMode)
 	{
 		m_Context->ClearRenderTargetView(m_MousePickingRTV.Get(), clearColor);
-		m_Context->ClearDepthStencilView(m_MousePickingDSV.Get(), D3D11_CLEAR_DEPTH, 1.f, 0);
-		m_Context->OMSetRenderTargets(1, m_MousePickingRTV.GetAddressOf(), m_MousePickingDSV.Get());
+		m_Context->ClearDepthStencilView(m_MainDSV.Get(), D3D11_CLEAR_DEPTH, 1.f, 0);
+		m_Context->OMSetRenderTargets(1, m_MousePickingRTV.GetAddressOf(), m_MainDSV.Get());
 		MousePickingPSO.RenderSetting(m_Context);
 		MousePickingCBuffer* cbufferCPU = static_cast<MousePickingCBuffer*>(MousePickingPSO.m_MaterialCBufferCPU);
 		for (int i = 0; i < objCount; i++)
 		{
 			cbufferCPU->idx = i;
-			float r = i / (256.0f * 256.0f);
-			float g = i / 256.0f;
-			float b = i / 255.0f;
-			cbufferCPU->color = 
-
+			cbufferCPU->color[0] = i % 256;
+			cbufferCPU->color[1] = (i / 256) % 256;
+			cbufferCPU->color[2] = i / (256 * 256);
+			MousePickingPSO.UpdateMatCBuffer(m_Context);
 			GameObject* pGO = m_Objs[i].get();
 			pGO->RenderUseCustomPSO(m_Context);
 		}
@@ -403,8 +402,8 @@ LRESULT CALLBACK App::MsgProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam
 			if (EditMode) 
 			{
 				m_MousePickingRTV.Reset();
-				m_MousePickingSRV.Reset();
-				m_MousePickingDSV.Reset();
+				m_MousePickingStagingTex.Reset();
+				m_MousePickingTex.Reset();
 			}
 
 			m_SwapChain->ResizeBuffers(0, //현재 갯수 유지
@@ -416,8 +415,7 @@ LRESULT CALLBACK App::MsgProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam
 			D3DUtil::CreateDepthBuffer(m_Device, m_MainDSV, m_ScreenWidth, m_ScreenHeight, numQualityLevels);
 			if (EditMode)
 			{
-				D3DUtil::CreateRenderTargetShaderResourceView(m_Device, m_SwapChain, m_MousePickingRTV, m_MousePickingSRV);
-				D3DUtil::CreateDepthBuffer(m_Device, m_MousePickingDSV, m_ScreenWidth, m_ScreenHeight, numQualityLevels);
+				D3DUtil::CreateMousePickingResources(m_Device, m_MousePickingTex, m_MousePickingRTV, m_MousePickingStagingTex, m_ScreenWidth, m_ScreenHeight);
 			}
 
 			//카메라 정보 설정
@@ -595,8 +593,7 @@ bool App::InitDirect3D()
 
 	if (EditMode)
 	{
-		if (!D3DUtil::CreateRenderTargetShaderResourceView(m_Device, m_SwapChain, m_MousePickingRTV, m_MousePickingSRV)) { return false; }
-		if (!D3DUtil::CreateDepthBuffer(m_Device, m_MousePickingDSV, m_ScreenWidth, m_ScreenHeight, 0)) { return false; }
+		D3DUtil::CreateMousePickingResources(m_Device, m_MousePickingTex, m_MousePickingRTV, m_MousePickingStagingTex, m_ScreenWidth, m_ScreenHeight);
 	}
 
 	D3DUtil::CreateCBuffer(m_Device, m_GlobalCBufferCPU, m_GlobalCBufferGPU);
