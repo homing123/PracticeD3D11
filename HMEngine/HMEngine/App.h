@@ -9,7 +9,9 @@
 #include <imgui.h>
 #include <imgui_impl_dx11.h>
 #include <imgui_impl_win32.h>
+#include "ImGuiUtil.h"
 
+#include "Util.h"
 #include "GraphicsCommon.h"
 #include "D3DUtil.h"
 #include "MeshFactory.h"
@@ -48,6 +50,9 @@ public:
 	const bool isKeyUp(UINT key)const;
 	const bool isKey(UINT key)const;
 	const Vector2 GetMouseMove() const;
+	const bool isMouseDown(UINT button)const;
+	const bool isMouseUp(UINT button)const;
+	const bool isMouse(UINT button)const;
 private:
 
 	void Start();
@@ -75,6 +80,9 @@ private:
 	ComPtr<ID3D11Texture2D> m_MousePickingTex;
 	ComPtr<ID3D11RenderTargetView> m_MousePickingRTV;
 	ComPtr<ID3D11Texture2D> m_MousePickingStagingTex;
+	int m_MousePickingObjIdx = -1;
+	GameObject* m_SelectedObj = nullptr;
+
 
 	unordered_map<size_t, unique_ptr<Model>> m_Models;
 	unordered_map<size_t, ComPtr<ID3D11ShaderResourceView>> m_TexViews;
@@ -89,13 +97,17 @@ private:
 	GlobalCBuffer m_GlobalCBufferCPU;
 	ComPtr<ID3D11Buffer> m_GlobalCBufferGPU;
 
-	GameObject* pSelectObj = nullptr;
 
 	bool m_KeyDown[256] = { false };
 	bool m_KeyDown_LastFrame[256] = { false };
+	bool m_MouseDown[2] = { false };
+	bool m_MouseDown_LastFrame[2] = { false };
 
-	Vector2 m_MousePos;
-	Vector2 m_MousePos_LastFrame;
+	Vector2 m_MousePosNS;
+	Vector2 m_MousePosNS_LastFrame;
+	Vector2 m_ImGuiLTopNS;
+	Vector2 m_ImGuiRBotNS;
+	bool m_MouseInGui;
 
 	bool m_MoveMode;
 

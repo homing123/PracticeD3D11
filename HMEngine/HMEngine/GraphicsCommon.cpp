@@ -15,6 +15,9 @@ namespace Graphics
 	ComPtr<ID3D11DepthStencilState> SkyboxDSS;
 	ComPtr<ID3D11DepthStencilState> MousePickingDSS;
 
+	ComPtr<ID3D11BlendState> BasicBS;
+	ComPtr<ID3D11BlendState> MousePickingBS;
+
 	ComPtr<ID3D11InputLayout> BasicMeshInputLayout;
 	ComPtr<ID3D11InputLayout> SkyboxInputLayout;
 	ComPtr<ID3D11InputLayout> SamplingInputLayout;
@@ -46,6 +49,7 @@ void Graphics::InitGraphics(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceCon
 	InitSampleState(device, context);
 	InitRasterizerState(device);
 	InitDepthStencilState(device);
+	InitBlendState(device);
 	InitShaders(device);
 	InitMaterial();
 	InitPSO(device);
@@ -108,6 +112,18 @@ void Graphics::InitDepthStencilState(ComPtr<ID3D11Device>& device)
 	desc.DepthFunc = D3D11_COMPARISON_NEVER;
 	ThrowFail(device->CreateDepthStencilState(&desc, SkyboxDSS.GetAddressOf()));
 }
+void Graphics::InitBlendState(ComPtr<ID3D11Device>& device)
+{
+	D3D11_RENDER_TARGET_BLEND_DESC rtvDesc;
+	D3D11_BLEND_DESC desc;
+	ZeroMemory(&desc, sizeof(desc));
+	ZeroMemory(&rtvDesc, sizeof(rtvDesc));
+	rtvDesc.BlendEnable = false;
+	rtvDesc.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL; //기본값 이지만 ZeroMemory 를 했기에 필요
+	desc.RenderTarget[0] = rtvDesc;
+	device->CreateBlendState(&desc, BasicBS.GetAddressOf());
+	device->CreateBlendState(&desc, MousePickingBS.GetAddressOf());
+}
 void Graphics::InitShaders(ComPtr<ID3D11Device>& device)
 {
 	vector<D3D11_INPUT_ELEMENT_DESC> vDesc;
@@ -158,6 +174,7 @@ void Graphics::InitPSO(ComPtr<ID3D11Device>& device)
 	BlinnPhongPSO_0.m_InputLayout = BasicMeshInputLayout;
 	BlinnPhongPSO_0.m_RasterState = SolidCWRS;
 	BlinnPhongPSO_0.m_DepthStensilState = BasicDSS;
+	BlinnPhongPSO_0.m_BlendState = BasicBS;
 	BlinnPhongPSO_0.SetMatKindAndCreateCBuffer(device, E_MatKind::BlinnPhong, &BlinnPhongMatCBuffer_0);
 	
 	BlinnPhongPSO_1.m_VS = BasicMeshVS;
@@ -165,6 +182,7 @@ void Graphics::InitPSO(ComPtr<ID3D11Device>& device)
 	BlinnPhongPSO_1.m_InputLayout = BasicMeshInputLayout;
 	BlinnPhongPSO_1.m_RasterState = SolidCWRS;
 	BlinnPhongPSO_1.m_DepthStensilState = BasicDSS;
+	BlinnPhongPSO_1.m_BlendState = BasicBS;
 	BlinnPhongPSO_1.SetMatKindAndCreateCBuffer(device, E_MatKind::BlinnPhong, &BlinnPhongMatCBuffer_1);
 
 	SkyboxPSO.m_VS = SkyboxVS;
@@ -172,6 +190,7 @@ void Graphics::InitPSO(ComPtr<ID3D11Device>& device)
 	SkyboxPSO.m_InputLayout = SkyboxInputLayout;
 	SkyboxPSO.m_RasterState = SolidCCWRS;
 	SkyboxPSO.m_DepthStensilState = SkyboxDSS;
+	SkyboxPSO.m_BlendState = BasicBS;
 	SkyboxPSO.SetMatKindAndCreateCBuffer(device, E_MatKind::Skybox, &SkyboxMatCBuffer);
 
 	MousePickingPSO.m_VS = BasicMeshVS;
@@ -179,5 +198,11 @@ void Graphics::InitPSO(ComPtr<ID3D11Device>& device)
 	MousePickingPSO.m_InputLayout = BasicMeshInputLayout;
 	MousePickingPSO.m_RasterState = SolidCWRS;
 	MousePickingPSO.m_DepthStensilState = MousePickingDSS;
+	MousePickingPSO.m_BlendState = MousePickingBS;
+	D3D11_BLEND_DESC desc;
+	MousePickingBS.Get()->GetDesc(&desc);
+	D3D11_RENDER_TARGET_BLEND_DESC rtvDesc;
+	rtvDesc = desc.RenderTarget[0];
+
 	MousePickingPSO.SetMatKindAndCreateCBuffer(device, E_MatKind::MousePicking, &MousePickingMatCBuffer);
 }

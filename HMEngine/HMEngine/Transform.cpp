@@ -3,13 +3,13 @@ Transform::Transform(ComPtr<ID3D11Device>& device)
 {
 	D3DUtil::CreateCBuffer(device, m_TransformCBufferCPU, m_TransformCBufferGPU);
 }
-Vector3 Transform::GetPosition() const { return m_Position; }
-Quaternion Transform::GetRotation() const { return m_Rotation; }
-Vector3 Transform::GetScale() const { return m_Scale; }
-Matrix Transform::GetWorldMat() const { return m_WorldMat; }
-Vector3 Transform::GetForward() const { return m_Forward; }
-Vector3 Transform::GetUp() const { return m_Up; }
-Vector3 Transform::GetRight() const { return m_Right; }
+const Vector3 Transform::GetPosition() const { return m_Position; }
+const Quaternion Transform::GetRotation() const { return m_Rotation; }
+const Vector3 Transform::GetScale() const { return m_Scale; }
+const Matrix Transform::GetWorldMat() const { return m_WorldMat; }
+const Vector3 Transform::GetForward() const { return m_Forward; }
+const Vector3 Transform::GetUp() const { return m_Up; }
+const Vector3 Transform::GetRight() const { return m_Right; }
 
 void Transform::SetPosition(const Vector3& _position)
 {

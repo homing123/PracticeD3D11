@@ -39,10 +39,24 @@ void App::UpdateGUI()
 {
 	//rendering option
 	ImGui::Checkbox("MoveMode", &m_MoveMode);
-	if (pSelectObj != nullptr)
+
+	if (m_SelectedObj != nullptr)
 	{
-		ImGui::TreeNode(pSelectObj->m_Name.c_str());
+		if (ImGui::TreeNode(m_SelectedObj->m_Name.c_str()))
+		{
+			Transform* pTF = m_SelectedObj->GetPTransform();
+			ImGuiUtil::DrawTransform(pTF);
+			ImGui::TreePop();
+		}
 	}
+
+	//ImGui area ignore
+	ImVec2 imguiPos = ImGui::GetWindowPos();
+	ImVec2 imguiSize = ImGui::GetWindowSize();
+	m_ImGuiLTopNS = Vector2(imguiPos.x / m_ScreenWidth, imguiPos.y / m_ScreenHeight);
+	m_ImGuiRBotNS = Vector2((imguiPos.x + imguiSize.x) / m_ScreenWidth, (imguiPos.y + imguiSize.y) / m_ScreenHeight);
+
+	//cout << to_string(imguiPos.x) << " " << to_string(imguiPos.y) << " " << to_string(imguiSize.x) << " " << to_string(imguiSize.y) << endl;
 	
 }
 void App::Update(const float deltaTime)
@@ -91,9 +105,33 @@ void App::Update(const float deltaTime)
 		Vector3 euler = pCamTF->GetRotation().ToEuler();
 		if (mouseMove.y != 0 || mouseMove.x != 0)
 		{
-			euler.x -= mouseMove.y * deltaTime * camRotSpeed;
+			euler.x += mouseMove.y * deltaTime * camRotSpeed;
 			euler.y += mouseMove.x * deltaTime * camRotSpeed;
 			pCamTF->SetEuler(euler);
+		}
+	}
+	else
+	{
+		if (m_MouseInGui == false)
+		{
+			if (isMouseDown(0))
+			{
+				if (m_MousePickingObjIdx >= 0)
+				{
+					m_SelectedObj = m_Objs[m_MousePickingObjIdx].get(); //imgui 영역은 제외해야함
+				}
+				else
+				{
+					m_SelectedObj = nullptr;
+				}
+			}
+			if (m_SelectedObj != nullptr)
+			{
+				if (isMouseUp(0))
+				{
+
+				}
+			}
 		}
 	}
 	
@@ -130,84 +168,73 @@ void App::Render()
 	//IBLTexture
 
 	//스카이박스
-	//m_Skybox.Render(m_Context);
+	m_Skybox.Render(m_Context);
 
 	//기본 오브젝트
 	int objCount = m_Objs.size();
 	for (int i = 0; i < objCount; i++)
 	{
 		GameObject* pGO = m_Objs[i].get();
-		//pGO->Render(m_Context);
+		pGO->Render(m_Context);
 	}
 
 	//post effect
 
 	//post processing
-
 	//Mouse Picking
 	if (EditMode)
 	{
+		//Mousepicking draw
 		m_Context->ClearRenderTargetView(m_MousePickingRTV.Get(), clearColor);
 		m_Context->ClearDepthStencilView(m_MainDSV.Get(), D3D11_CLEAR_DEPTH, 1.f, 0);
 		m_Context->OMSetRenderTargets(1, m_MousePickingRTV.GetAddressOf(), m_MainDSV.Get());
 		MousePickingPSO.RenderSetting(m_Context);
 		MousePickingCBuffer* cbufferCPU = static_cast<MousePickingCBuffer*>(MousePickingPSO.m_MaterialCBufferCPU);
+		UINT r = 0, g = 0, b = 0;
 		for (int i = 0; i < objCount; i++)
 		{
+			Util::IdxToUINT3Color(i + 1, r, g, b);
 			cbufferCPU->idx = i;
-			cbufferCPU->color[0] = i % 256;
-			cbufferCPU->color[1] = (i / 256) % 256;
-			cbufferCPU->color[2] = i / (256 * 256);
+			cbufferCPU->color[0] = r;
+			cbufferCPU->color[1] = g;
+			cbufferCPU->color[2] = b;
 			MousePickingPSO.UpdateMatCBuffer(m_Context);
 			GameObject* pGO = m_Objs[i].get();
 			pGO->RenderUseCustomPSO(m_Context);
 		}
+		m_Context->OMSetRenderTargets(1, m_MainRTV.GetAddressOf(), m_MainDSV.Get());
+		m_Context->CopyResource(m_MousePickingStagingTex.Get(), m_MousePickingTex.Get());
+
+		//Ignore ImGui area
+		if (m_MousePosNS.x >= m_ImGuiLTopNS.x && m_MousePosNS.x <= m_ImGuiRBotNS.x && m_MousePosNS.y >= m_ImGuiLTopNS.y && m_MousePosNS.y <= m_ImGuiRBotNS.y)
+		{
+			m_MouseInGui = true;
+		}	
+		else
+		{
+			m_MouseInGui = false;
+
+			//Copy to stagingTex
+			D3D11_MAPPED_SUBRESOURCE ms;
+			HRESULT hr = m_Context->Map(m_MousePickingStagingTex.Get(), 0, D3D11_MAP_READ, 0, &ms);
+			if (SUCCEEDED(hr))
+			{
+				//Get texel
+				int screen_x = 0, screen_y = 0;
+				Util::NDCToScreen(m_MousePosNS, m_ScreenWidth, m_ScreenHeight, screen_x, screen_y);
+				uint8_t* pixel = static_cast<uint8_t*>(ms.pData) + screen_x * 4 + screen_y * ms.RowPitch;
+				uint8_t r = pixel[0];
+				uint8_t g = pixel[1];
+				uint8_t b = pixel[2];
+				m_MousePickingObjIdx = Util::UINT3ColorToIdx(r, g, b) - 1;
+			}
+			else
+			{
+				m_MousePickingObjIdx = -1;
+			}
+			m_Context->Unmap(m_MousePickingStagingTex.Get(), 0);
+		}
 	}
-
-	//ID3D11ShaderResourceView* arr_pView[1] = { m_CubeMap.m_SpecularResourceView.Get()};
-	//m_Context->IASetInputLayout(m_CubeMap.m_InputLayout.Get());
-	//m_Context->IASetVertexBuffers(0, 1, pCubeMapMesh->m_VertexBuffer.GetAddressOf(), &stride, &offset);
-	//m_Context->IASetIndexBuffer(pCubeMapMesh->m_IndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-	//m_Context->VSSetShader(m_CubeMap.m_VS.Get(), 0, 0);
-	//m_Context->PSSetShader(m_CubeMap.m_PS.Get(), 0, 0);
-	//m_CubeMap.UpdateVSCBuffer(m_Context.Get(), MatView, MatProj);
-	//m_Context->PSSetShaderResources(0, 1, arr_pView);
-	//m_Context->PSSetSamplers(0, 1, m_SamplerState.GetAddressOf());
-	//m_Context->VSSetConstantBuffers(0, 1, m_CubeMap.m_VSCBuffer.GetAddressOf());
-	//m_Context->PSSetConstantBuffers(0, 1, m_CubeMap.m_PSCBuffer.GetAddressOf());
-	//m_Context->DrawIndexed(pCubeMapMesh->GetIndexCount(), 0, 0);
-
-	//PSCBuffer psCBuffer;
-	//psCBuffer.eyeWorld = m_Cam.GetPTransform()->GetPosition();
-	//// 여러 개 조명 사용 예시
-	//for (int i = 0; i < MAX_LIGHTS; i++) {
-	//	// 다른 조명 끄기
-	//	if (i != m_LightType) {
-	//		psCBuffer.lights[i].strength *= 0.0f;
-	//	}
-	//	else {
-	//		psCBuffer.lights[i] = m_Light;
-	//	}
-	//}
-	//psCBuffer.useTexture = m_UseTexture;
-	//psCBuffer.material.ambient = Vector3(1, 1, 1) * m_MatAmbient;
-	//psCBuffer.material.diffuse = Vector3(1, 1, 1) * m_MatDiffuse;
-	//psCBuffer.material.specular = Vector3(1, 1, 1) * m_MatSpecular;
-	//psCBuffer.material.shininess = m_MatShininess;
-	//psCBuffer.rimColor = m_RimColor;
-	//psCBuffer.rimPower = m_RimPower;
-	//psCBuffer.rimStrength = m_RimStrength;
-
-	//size_t texKey = hash<string>()("wall");
-	//ID3D11ShaderResourceView* texViews[3] = { m_TexViews[texKey].Get(), m_CubeMap.m_DiffuseResourceView.Get(), m_CubeMap.m_SpecularResourceView.Get()};
-	//ID3D11SamplerState* samplers[1] = { m_SamplerState.Get() };
-	//for (int i = 0; i < objCount; i++)
-	//{
-	//	
-	//	GameObject* pGO = m_Objs[i].get();
-	//	pGO->Render(m_Context.Get(), MatView, MatProj, psCBuffer, texViews, samplers);
-	//	
-	//}
 
 	
 }
@@ -294,10 +321,30 @@ const bool App::isKeyUp(UINT key) const
 	}
 	return false;
 }
-
+const bool App::isMouseDown(UINT button)const
+{
+	if (button < 2) //0 = left, 1 = right
+	{
+		return m_MouseDown[button] && m_MouseDown_LastFrame[button] == false;
+	}
+}
+const bool App::isMouseUp(UINT button)const
+{
+	if (button < 2) //0 = left, 1 = right
+	{
+		return m_MouseDown[button] == false && m_MouseDown_LastFrame[button];
+	}
+}
+const bool App::isMouse(UINT button)const
+{
+	if (button < 2) //0 = left, 1 = right
+	{
+		return m_MouseDown[button];
+	}
+}
 const Vector2 App::GetMouseMove()const
 {
-	return m_MousePos - m_MousePos_LastFrame;
+	return m_MousePosNS - m_MousePosNS_LastFrame;
 }
 
 bool App::Init()
@@ -357,7 +404,9 @@ int App::Run()
 		{
 			m_KeyDown_LastFrame[i] = m_KeyDown[i];
 		}
-		m_MousePos_LastFrame = m_MousePos;
+		m_MousePosNS_LastFrame = m_MousePosNS;
+		m_MouseDown_LastFrame[0] = m_MouseDown[0];
+		m_MouseDown_LastFrame[1] = m_MouseDown[1];
 
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
@@ -422,17 +471,25 @@ LRESULT CALLBACK App::MsgProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam
 		}
 		break;
 	case WM_MOUSEMOVE:
-		//좌상단 (0,0), 우하단 = screen size  => 좌하단 (0,0) 우상단 (1,1)
-		m_MousePos.x = GET_X_LPARAM(lParam) / (float)m_ScreenWidth;
-		m_MousePos.y = 1 - GET_Y_LPARAM(lParam) / (float)m_ScreenHeight;
-		//cout << to_string(m_MousePos.x) <<" " << to_string(m_MousePos.y) << endl;
+		//좌상단 (0,0), 우하단 = screen size  => 좌상단 (0,0) 우하단 (1,1) NormalizedScreen
+		m_MousePosNS.x = GET_X_LPARAM(lParam) / (float)m_ScreenWidth;
+		m_MousePosNS.y = GET_Y_LPARAM(lParam) / (float)m_ScreenHeight;
+		//cout << to_string(m_MousePosNS.x) <<" " << to_string(m_MousePosNS.y) << endl;
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
 	case WM_LBUTTONDOWN:
+		m_MouseDown[0] = true;
+		break;
+	case WM_LBUTTONUP:
+		m_MouseDown[0] = false;
 		break;
 	case WM_RBUTTONDOWN:
+		m_MouseDown[1] = true;
+		break;
+	case WM_RBUTTONUP:
+		m_MouseDown[1] = false;
 		break;
 	case WM_KEYDOWN:
 		m_KeyDown[wParam] = true;

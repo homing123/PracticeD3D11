@@ -15,8 +15,8 @@ namespace Graphics
 	extern ComPtr<ID3D11DepthStencilState> SkyboxDSS;
 	extern ComPtr<ID3D11DepthStencilState> MousePickingDSS;
 
-	extern ComPtr<ID3D11BlendState> BasicBSS;
-	extern ComPtr<ID3D11BlendState> MousePickingBSS;
+	extern ComPtr<ID3D11BlendState> BasicBS;
+	extern ComPtr<ID3D11BlendState> MousePickingBS;
 
 	extern ComPtr<ID3D11InputLayout> BasicMeshInputLayout;
 	extern ComPtr<ID3D11InputLayout> SkyboxInputLayout;
@@ -45,6 +45,7 @@ namespace Graphics
 	void InitSampleState(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context);
 	void InitRasterizerState(ComPtr<ID3D11Device>& device);
 	void InitDepthStencilState(ComPtr<ID3D11Device>& device);
+	void InitBlendState(ComPtr<ID3D11Device>& device);
 	void InitShaders(ComPtr<ID3D11Device>& device);
 	void InitMaterial();
 	void InitPSO(ComPtr<ID3D11Device>& device);

@@ -15,13 +15,13 @@ class Transform
 public:
 	Transform() {};
 	Transform(ComPtr<ID3D11Device>& device);
-	Vector3 GetPosition() const;
-	Quaternion GetRotation() const;
-	Vector3 GetScale() const;
-	Matrix GetWorldMat() const;
-	Vector3 GetForward() const;
-	Vector3 GetUp() const;
-	Vector3 GetRight() const;
+	const Vector3 GetPosition() const;
+	const Quaternion GetRotation() const;
+	const Vector3 GetScale() const;
+	const Matrix GetWorldMat() const;
+	const Vector3 GetForward() const;
+	const  Vector3 GetUp() const;
+	const Vector3 GetRight() const;
 
 	void SetPosition(const Vector3& _position);
 	void Translate(const Vector3& move);

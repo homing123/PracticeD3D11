@@ -27,11 +27,13 @@
     <ClCompile Include="GraphicsCommon.cpp" />
     <ClCompile Include="GraphicsPSO.cpp" />
     <ClCompile Include="ImageFilter.cpp" />
+    <ClCompile Include="ImGuiUtil.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MeshFactory.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelLoader.cpp" />
     <ClCompile Include="Transform.cpp" />
+    <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
@@ -43,6 +45,7 @@
     <ClInclude Include="GraphicsCommon.h" />
     <ClInclude Include="GraphicsPSO.h" />
     <ClInclude Include="ImageFilter.h" />
+    <ClInclude Include="ImGuiUtil.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshData.h" />
@@ -52,6 +55,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="resource1.h" />
     <ClInclude Include="Transform.h" />
+    <ClInclude Include="Util.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <ItemGroup>
