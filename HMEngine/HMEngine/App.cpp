@@ -125,11 +125,47 @@ void App::Update(const float deltaTime)
 					m_SelectedObj = nullptr;
 				}
 			}
+			if (isMouse(0) && isMouseDown(0) == false)
+			{
+				if (m_SelectedObj != nullptr) 
+				{
+					Vector2 mouseMove = GetMouseMove();
+					if (mouseMove != Vector2::Zero) 
+					{
+						Transform* pTF = m_SelectedObj->GetPTransform();
+						Vector3 worldPos = pTF->GetPosition();
+						Vector4 worldV4 = Vector4(worldPos.x, worldPos.y, worldPos.z, 1);
+
+						Matrix viewMat = m_Cam.GetViewMat();
+						Matrix projMat = m_Cam.GetProjectionMat();
+						Matrix vp = viewMat * projMat;
+						Matrix inv_vp = vp.Invert();
+
+						Vector4 clipPos = Vector4::Transform(worldV4, vp);
+						clipPos.x = (m_MousePosNS.x * 2) * clipPos.w;
+						clipPos.y = 1 - (m_MousePosNS.y * 2) * clipPos.w;
+						Vector4 curMouseWS = Vector4::Transform(clipPos, inv_vp);
+						clipPos.x = (m_MousePosNS_LastFrame.x * 2) * clipPos.w;
+						clipPos.y = 1 - (m_MousePosNS_LastFrame.y * 2) * clipPos.w;
+						Vector4 lastMouseWS = Vector4::Transform(clipPos, inv_vp);
+						Vector3 mouseMoveWS = Vector3(curMouseWS.x - lastMouseWS.x, curMouseWS.y - lastMouseWS.y, curMouseWS.z - lastMouseWS.z);
+						pTF->SetPosition(worldPos + mouseMoveWS);
+					}
+
+				}
+
+				//ndc z값을 구한다.
+				//마우스 이동량을 ndc에서의 이동량으로 변환
+				//마우스ndc이동량을 월드 이동량으로 변환
+
+				
+
+			}
 			if (m_SelectedObj != nullptr)
 			{
+				
 				if (isMouseUp(0))
 				{
-
 				}
 			}
 		}
