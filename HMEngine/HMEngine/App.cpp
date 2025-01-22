@@ -39,13 +39,18 @@ void App::UpdateGUI()
 {
 	//rendering option
 	ImGui::Checkbox("MoveMode", &m_MoveMode);
-
+	if (ImGui::TreeNode("IBL"))
+	{
+		ImGui::SliderFloat("IBL_Strength", &m_GlobalCBufferCPU.iblStrength, 0, 1);
+		ImGui::TreePop();
+	}
 	if (m_SelectedObj != nullptr)
 	{
 		if (ImGui::TreeNode(m_SelectedObj->m_Name.c_str()))
 		{
 			Transform* pTF = m_SelectedObj->GetPTransform();
-			ImGuiUtil::DrawTransform(pTF);
+			ImGuiUtil::DrawTransform(m_SelectedObj->GetPTransform());
+			ImGuiUtil::DrawMaterial(m_SelectedObj->m_PSO->m_MaterialCBufferCPU, m_SelectedObj->m_PSO->m_MatKind);
 			ImGui::TreePop();
 		}
 	}
@@ -151,15 +156,7 @@ void App::Update(const float deltaTime)
 						Vector3 mouseMoveWS = Vector3(curMouseWS.x - lastMouseWS.x, curMouseWS.y - lastMouseWS.y, curMouseWS.z - lastMouseWS.z);
 						pTF->SetPosition(worldPos + mouseMoveWS);
 					}
-
 				}
-
-				//ndc z값을 구한다.
-				//마우스 이동량을 ndc에서의 이동량으로 변환
-				//마우스ndc이동량을 월드 이동량으로 변환
-
-				
-
 			}
 			if (m_SelectedObj != nullptr)
 			{
@@ -193,6 +190,7 @@ void App::Render()
 	D3DUtil::UpdateCBuffer(m_Context, m_GlobalCBufferCPU, m_GlobalCBufferGPU);
 
 	m_Context->VSSetConstantBuffers(GLOBAL_CBUFFER_SLOT, 1, m_GlobalCBufferGPU.GetAddressOf());
+	m_Context->PSSetConstantBuffers(GLOBAL_CBUFFER_SLOT, 1, m_GlobalCBufferGPU.GetAddressOf());
 
 
 	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };

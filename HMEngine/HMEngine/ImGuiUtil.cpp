@@ -3,27 +3,48 @@
 
 const void ImGuiUtil::DrawTransform(Transform* pTF)
 {
-	Vector3 pos = pTF->GetPosition();
-	float arr_pos[3] = { pos.x, pos.y, pos.z };
-	Vector3 rot = pTF->GetRotation().ToEuler();
-	float arr_rot[3] = { rot.x, rot.y, rot.z };
-	Vector3 scale = pTF->GetScale();
-	float arr_scale[3] = { scale.x, scale.y, scale.z };
+	if (ImGui::TreeNode("Transform")) 
+	{
+		Vector3 pos = pTF->GetPosition();
+		Vector3 rot = pTF->GetRotation().ToEuler();
+		Vector3 scale = pTF->GetScale();
 
-	ImGui::DragFloat3("Position", arr_pos, 0.05f);
-	ImGui::DragFloat3("Rotation", arr_rot, 0.01f);
-	ImGui::DragFloat3("Scale", arr_scale, 0.02f);
+		ImGui::DragFloat3("Position", &pos.x, 0.05f);
+		ImGui::DragFloat3("Rotation", &rot.x, 0.01f);
+		ImGui::DragFloat3("Scale", &scale.x, 0.02f);
 
-	pos.x = arr_pos[0];
-	pos.y = arr_pos[1];
-	pos.z = arr_pos[2];
-	rot.x = arr_rot[0];
-	rot.y = arr_rot[1];
-	rot.z = arr_rot[2];
-	scale.x = arr_scale[0];
-	scale.y = arr_scale[1];
-	scale.z = arr_scale[2];
-	pTF->SetPosition(pos);
-	pTF->SetEuler(rot);
-	pTF->SetScale(scale);
+		pTF->SetPosition(pos);
+		pTF->SetEuler(rot);
+		pTF->SetScale(scale);
+		ImGui::TreePop();
+	}
+}
+const void ImGuiUtil::DrawMaterial(MaterialCBuffer* pMat, const E_MatKind kind)
+{
+	if (ImGui::TreeNode("Material"))
+	{
+		switch (kind)
+		{
+		case E_MatKind::BlinnPhong:
+		{
+			BlinnPhongCBuffer* pBlinnPhong = static_cast<BlinnPhongCBuffer*>(pMat);
+			ImGui::SliderFloat3("Ambient", &pBlinnPhong->ambient.x, 0, 1);
+			ImGui::SliderFloat3("Diffuse", &pBlinnPhong->diffuse.x, 0, 1);
+			ImGui::SliderFloat3("Specular", &pBlinnPhong->specular.x, 0, 1);
+			ImGui::SliderFloat("Shininess", &pBlinnPhong->shininess, 0, 50);
+		}
+		break;
+		case E_MatKind::PBR:
+
+			//D3DUtil::CreateCBuffer(device, *static_cast<PBRCBuffer*>(m_MaterialCBufferCPU), m_MaterialCBufferGPU);
+			break;
+		case E_MatKind::Skybox:
+			//D3DUtil::CreateCBuffer(device, *static_cast<SkyboxCBuffer*>(m_MaterialCBufferCPU), m_MaterialCBufferGPU);
+			break;
+		case E_MatKind::MousePicking:
+			//D3DUtil::CreateCBuffer(device, *static_cast<MousePickingCBuffer*>(m_MaterialCBufferCPU), m_MaterialCBufferGPU);
+			break;
+		}
+		ImGui::TreePop();
+	}
 }
