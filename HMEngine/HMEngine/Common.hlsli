@@ -1,15 +1,18 @@
 #ifndef __COMMON_HLSL__
 #define __COMMON_HLSL__
 
-#define MAX_LIGHTS 3
-#define NUM_DIR_LIGHTS 1
-#define NUM_POINT_LIGHTS 1
-#define NUM_SPOT_LIGHTS 1
+#define MAX_LIGHTS 8
 
+#define LIGHT_NONE 0
+#define LIGHT_DIRECTIONAL 1
+#define LIGHT_POINT 2
+#define LIGHT_SPOT 3
 
 //모든 셰이더에서 공통으로 사용하는것들
 struct Light
 {
+	uint LightKind;
+	float3 dummy;
 	float3 strength ;       // 12
 	float fallOffStart;                 // 4
 	float3 direction; // 12
@@ -27,8 +30,6 @@ cbuffer GlobalCBuffer : register(b10)
 
 	float3 eyeWorld;
 	float iblStrength;
-
-	Light lights[MAX_LIGHTS];
 };
 cbuffer TransformCBuffer : register(b11)
 {
@@ -36,6 +37,10 @@ cbuffer TransformCBuffer : register(b11)
 	float4x4 worldIT;
 };
 
+cbuffer LightCBuffer : register (b12)
+{
+	Light lights[MAX_LIGHTS];
+}
 SamplerState LinearWrap : register(s0);
 SamplerState LinearClamp : register(s1);
 

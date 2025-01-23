@@ -19,6 +19,7 @@ namespace Graphics
 	ComPtr<ID3D11BlendState> MousePickingBS;
 
 	ComPtr<ID3D11InputLayout> BasicMeshInputLayout;
+	ComPtr<ID3D11InputLayout> BillboardInputLayout;
 	ComPtr<ID3D11InputLayout> SkyboxInputLayout;
 	ComPtr<ID3D11InputLayout> SamplingInputLayout;
 
@@ -160,8 +161,10 @@ void Graphics::InitShaders(ComPtr<ID3D11Device>& device)
 
 	D3DUtil::CreateVertexShaderAndInputLayout(device, L"VSBasicMesh.hlsl", vDesc, BasicMeshVS, BasicMeshInputLayout);
 	D3DUtil::CreateVertexShaderAndInputLayout(device, L"VSSkybox.hlsl", vDesc, SkyboxVS, SkyboxInputLayout);
-	D3DUtil::CreateVertexShaderAndInputLayout(device, L"VSBillboard.hlsl", vDesc, BillboardVS, BasicMeshInputLayout);
+	D3DUtil::CreateVertexShaderAndInputLayout(device, L"VSBillboard.hlsl", vDesc, BillboardVS, BillboardInputLayout);
 	
+	D3DUtil::CreateGeometryShader(device, L"GSBillboard.hlsl", BillboardGS);
+
 	D3DUtil::CreatePixelShader(device, L"PSBlinnPhong.hlsl", BlinnPhongPS);
 	D3DUtil::CreatePixelShader(device, L"PSIBL.hlsl", IBLPS);
 	D3DUtil::CreatePixelShader(device, L"PSSkybox.hlsl", SkyboxPS);
@@ -222,4 +225,13 @@ void Graphics::InitPSO(ComPtr<ID3D11Device>& device)
 	MousePickingPSO.m_DepthStensilState = MousePickingDSS;
 	MousePickingPSO.m_BlendState = MousePickingBS;
 	MousePickingPSO.SetMatKindAndCreateCBuffer(device, E_MatKind::MousePicking, &MousePickingMatCBuffer);
+
+	BillboardPSO.m_VS = BillboardVS;
+	BillboardPSO.m_GS = BillboardGS;
+	BillboardPSO.m_PS = BillboardPS;
+	BillboardPSO.m_InputLayout = BasicMeshInputLayout;
+	BillboardPSO.m_RasterState = SolidCWRS;
+	BillboardPSO.m_DepthStensilState = BasicDSS;
+	BillboardPSO.m_BlendState = BasicBS;
+
 }

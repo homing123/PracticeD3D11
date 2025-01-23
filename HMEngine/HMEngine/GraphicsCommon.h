@@ -19,6 +19,7 @@ namespace Graphics
 	extern ComPtr<ID3D11BlendState> MousePickingBS;
 
 	extern ComPtr<ID3D11InputLayout> BasicMeshInputLayout;
+	extern ComPtr<ID3D11InputLayout> BillboardInputLayout;
 	extern ComPtr<ID3D11InputLayout> SkyboxInputLayout;
 	extern ComPtr<ID3D11InputLayout> SamplingInputLayout;
 

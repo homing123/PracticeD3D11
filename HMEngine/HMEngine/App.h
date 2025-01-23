@@ -18,6 +18,7 @@
 #include "Camera.h"
 #include "Material.h"
 #include "GameObject.h"
+#include "Light.h"
 #include "CubeMapping.h"
 #include "ImageFilter.h"
 
@@ -41,6 +42,12 @@ public:
 	int Run();
 	GameObject* CreateObj(const string& name, const string& modelName, GraphicsPSO* pPSO);
 	GameObject* GetObj(const string& name);
+	DirectionalLight* CreateDirectionalLight(Vector3& position, Vector3& euler, Vector3& strength);
+	PointLight* CreatePointLight(Vector3& position, Vector3& strength, float fallOffStart, float fallOffEnd);
+	SpotLight* CreateSpotLight(Vector3& position, Vector3& euler, Vector3& strength, float fallOffStart, float fallOffEnd, float spotPower);
+	DirectionalLight* CreateDirectionalLight();
+	PointLight* CreatePointLight();
+	SpotLight* CreateSpotLight();
 
 	Model* GetModel(const string& name);
 	ID3D11ShaderResourceView* GetTexView(const string& name);
@@ -87,6 +94,9 @@ private:
 	unordered_map<size_t, unique_ptr<Model>> m_Models;
 	unordered_map<size_t, ComPtr<ID3D11ShaderResourceView>> m_TexViews;
 	vector<shared_ptr<GameObject>> m_Objs;
+	vector<shared_ptr<DirectionalLight>> m_DirectionalLights;
+	vector<shared_ptr<PointLight>> m_PointLights;
+	vector<shared_ptr<SpotLight>> m_SpotLights;
 
 	Camera m_Cam;
 	GameObject m_Skybox;
@@ -96,6 +106,8 @@ private:
 	ComPtr<ID3D11ShaderResourceView> m_BRDFIBLSRV;
 	GlobalCBuffer m_GlobalCBufferCPU;
 	ComPtr<ID3D11Buffer> m_GlobalCBufferGPU;
+	LightCBuffer m_LightCBufferCPU;
+	ComPtr<ID3D11Buffer> m_LightCBufferGPU;
 
 
 	bool m_KeyDown[256] = { false };

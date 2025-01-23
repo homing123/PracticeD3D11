@@ -12,14 +12,25 @@ App* App::pIns = nullptr;
 
 void App::Start()
 {
-
 	//texture
 	ComPtr<ID3D11Texture2D> tex;
 	ComPtr<ID3D11ShaderResourceView> srv;
 	LoadTexture("../Resource/Tex/UVTex.png", false, tex, srv, 1);
+	LoadTexture("../Resource/Tex/LightIcon.png", false, tex, srv, 1);
+
+	//model
 	LoadModel("Sphere", MeshFactory::CreateSphere(1, 100, 100));
+
+	//object
 	//CreateObj("IBL_Sphere", "Sphere", &IBLPSO);
 	CreateObj("BlinnPhong_Sphere_0", "Sphere", &BlinnPhongPSO_0);
+
+	//light
+	DirectionalLight* pDLight_0 = CreateDirectionalLight();
+	DirectionalLight* pDLight_1 = CreateDirectionalLight();
+	PointLight* pPointLight_0 = CreatePointLight();
+	PointLight* pPointLight_1 = CreatePointLight();
+	SpotLight* pSpotLight_0 = CreateSpotLight();
 
 	//skybox
 	D3DUtil::CreateDDSTexture(m_Device, L"../Resource/CubeMap/SampleEnvHDR.dds", m_EnvIBLSRV, true);
@@ -199,6 +210,36 @@ void App::Render()
 	m_Context->VSSetConstantBuffers(GLOBAL_CBUFFER_SLOT, 1, m_GlobalCBufferGPU.GetAddressOf());
 	m_Context->PSSetConstantBuffers(GLOBAL_CBUFFER_SLOT, 1, m_GlobalCBufferGPU.GetAddressOf());
 
+	//Update LightCBuffer
+	int directionalLightCount = m_DirectionalLights.size();
+	int pointLightCount = m_PointLights.size();
+	int spotLightCount = m_SpotLights.size();
+	int idx = 0;
+	for (int i = 0; i < directionalLightCount; i++)
+	{
+		if (idx < MAX_LIGHTS) 
+		{
+			m_DirectionalLights[i].get()->SetLightCBuffer(m_LightCBufferCPU.lights[idx]);
+			idx++;
+		}
+	}
+	for (int i = 0; i < pointLightCount; i++)
+	{
+		if (idx < MAX_LIGHTS)
+		{
+			m_PointLights[i].get()->SetLightCBuffer(m_LightCBufferCPU.lights[idx]);
+			idx++;
+		}
+	}
+	for (int i = 0; i < spotLightCount; i++)
+	{
+		if (idx < MAX_LIGHTS)
+		{
+			m_SpotLights[i].get()->SetLightCBuffer(m_LightCBufferCPU.lights[idx]);
+			idx++;
+		}
+	}
+	m_Context->PSGetConstantBuffers(LIGHT_CBUFFER_SLOT, 1, m_LightCBufferGPU.GetAddressOf());
 
 	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	m_Context->ClearRenderTargetView(m_MainRTV.Get(), clearColor);
@@ -209,7 +250,7 @@ void App::Render()
 	//IBLTexture
 
 	//스카이박스
-	//m_Skybox.Render(m_Context);
+	m_Skybox.Render(m_Context);
 
 	//기본 오브젝트
 	int objCount = m_Objs.size();
@@ -297,8 +338,51 @@ GameObject* App::CreateObj(const string& name, const string& modelName, Graphics
 {
 	m_Objs.push_back(make_shared<GameObject>(GameObject(m_Device, name, GetModel(modelName), pPSO)));
 	return m_Objs.back().get();
-}
+}	
 
+DirectionalLight* App::CreateDirectionalLight(Vector3& position, Vector3& euler, Vector3& strength)
+{
+	m_DirectionalLights.push_back(make_shared<DirectionalLight>(position, euler, strength));
+	return m_DirectionalLights.back().get();
+}
+PointLight* App::CreatePointLight(Vector3& position, Vector3& strength, float fallOffStart, float fallOffEnd)
+{
+	m_PointLights.push_back(make_shared<PointLight>(position, strength, fallOffStart, fallOffEnd));
+	return m_PointLights.back().get();
+}
+SpotLight* App::CreateSpotLight(Vector3& position, Vector3& euler, Vector3& strength, float fallOffStart, float fallOffEnd, float spotPower)
+{
+	m_SpotLights.push_back(make_shared<SpotLight>(position, euler, strength, fallOffStart, fallOffEnd, spotPower));
+	return m_SpotLights.back().get();
+}
+DirectionalLight* App::CreateDirectionalLight()
+{
+	Vector3 pos = Vector3(0, 5, 0);
+	Vector3 euler = Vector3::Zero;
+	Vector3 strength = Vector3(1, 1, 1);
+	m_DirectionalLights.push_back(make_shared<DirectionalLight>(pos, euler, strength));
+	return m_DirectionalLights.back().get();
+}
+PointLight* App::CreatePointLight()
+{
+	Vector3 pos = Vector3(0, 5, 0);
+	Vector3 strength = Vector3(1, 1, 1);
+	float fallOffStart = 0.1;
+	float fallOffEnd = 1.0f;
+	m_PointLights.push_back(make_shared<PointLight>(pos, strength, fallOffStart, fallOffEnd));
+	return m_PointLights.back().get();
+}
+SpotLight* App::CreateSpotLight()
+{
+	Vector3 pos = Vector3(0, 5, 0);
+	Vector3 euler = Vector3(0, 0, 0);
+	Vector3 strength = Vector3(1, 1, 1);
+	float fallOffStart = 0.1;
+	float fallOffEnd = 1.0f;
+	float spotPower = 5;
+	m_SpotLights.push_back(make_shared<SpotLight>(pos, euler, strength, fallOffStart, fallOffEnd, spotPower));
+	return m_SpotLights.back().get();
+}
 GameObject* App::GetObj(const string& name)
 {
 	UINT size = m_Objs.size();
@@ -695,6 +779,7 @@ bool App::InitDirect3D()
 	}
 
 	D3DUtil::CreateCBuffer(m_Device, m_GlobalCBufferCPU, m_GlobalCBufferGPU);
+	D3DUtil::CreateCBuffer(m_Device, m_LightCBufferCPU, m_LightCBufferGPU);
 
 
 	return true;

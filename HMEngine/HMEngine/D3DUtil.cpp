@@ -194,13 +194,103 @@ void D3DUtil::CreateVertexShaderAndInputLayout(ComPtr<ID3D11Device>& device, con
 
 }
 
-static void CreateHullShader(ComPtr<ID3D11Device>& device, const wstring& fileName, ComPtr<ID3D11HullShader>& hs)
-{}
-static void CreateDomainShader(ComPtr<ID3D11Device>& device, const wstring& fileName, ComPtr<ID3D11DomainShader>& ds)
-{}
+void D3DUtil::CreateHullShader(ComPtr<ID3D11Device>& device, const wstring& fileName, ComPtr<ID3D11HullShader>& hs)
+{
+	ComPtr<ID3DBlob> shaderBlob;
+	ComPtr<ID3DBlob> errorBlob;
 
-static void CreateGeometryShader(ComPtr<ID3D11Device>& device, const wstring& fileName, ComPtr<ID3D11GeometryShader>& gs)
-{}
+	UINT compileFlags = 0;
+
+#if defined(DEBUG) || defined(_DEBUG)
+	compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#endif
+
+	HRESULT hr = D3DCompileFromFile(fileName.c_str(), 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", "hs_5_0", compileFlags, 0, &shaderBlob, &errorBlob);
+	if (FAILED(hr))
+	{
+		if ((hr & D3D11_ERROR_FILE_NOT_FOUND) != 0)
+		{
+			wcout << fileName.c_str() << "File not Found" << endl;
+			return;
+		}
+
+		if (errorBlob)
+		{
+			wcout << fileName.c_str() << "Compile error\n" << (char*)errorBlob->GetBufferPointer() << endl;
+			return;
+		}
+
+		wcout << fileName.c_str() << " Unknown error in VSBasic shader compile" << endl;
+		return;
+	}
+
+	device->CreateHullShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), NULL, hs.GetAddressOf());
+}
+void D3DUtil::CreateDomainShader(ComPtr<ID3D11Device>& device, const wstring& fileName, ComPtr<ID3D11DomainShader>& ds)
+{
+	ComPtr<ID3DBlob> shaderBlob;
+	ComPtr<ID3DBlob> errorBlob;
+
+	UINT compileFlags = 0;
+
+#if defined(DEBUG) || defined(_DEBUG)
+	compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#endif
+
+	HRESULT hr = D3DCompileFromFile(fileName.c_str(), 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", "ds_5_0", compileFlags, 0, &shaderBlob, &errorBlob);
+	if (FAILED(hr))
+	{
+		if ((hr & D3D11_ERROR_FILE_NOT_FOUND) != 0)
+		{
+			wcout << fileName.c_str() << "File not Found" << endl;
+			return;
+		}
+
+		if (errorBlob)
+		{
+			wcout << fileName.c_str() << "Compile error\n" << (char*)errorBlob->GetBufferPointer() << endl;
+			return;
+		}
+
+		wcout << fileName.c_str() << " Unknown error in VSBasic shader compile" << endl;
+		return;
+	}
+
+	device->CreateDomainShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), NULL, ds.GetAddressOf());
+}
+
+void D3DUtil::CreateGeometryShader(ComPtr<ID3D11Device>& device, const wstring& fileName, ComPtr<ID3D11GeometryShader>& gs)
+{
+	ComPtr<ID3DBlob> shaderBlob;
+	ComPtr<ID3DBlob> errorBlob;
+
+	UINT compileFlags = 0;
+
+#if defined(DEBUG) || defined(_DEBUG)
+	compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#endif
+
+	HRESULT hr = D3DCompileFromFile(fileName.c_str(), 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", "gs_5_0", compileFlags, 0, &shaderBlob, &errorBlob);
+	if (FAILED(hr))
+	{
+		if ((hr & D3D11_ERROR_FILE_NOT_FOUND) != 0)
+		{
+			wcout << fileName.c_str() << "File not Found" << endl;
+			return;
+		}
+
+		if (errorBlob)
+		{
+			wcout << fileName.c_str() << "Compile error\n" << (char*)errorBlob->GetBufferPointer() << endl;
+			return;
+		}
+
+		wcout << fileName.c_str() << " Unknown error in VSBasic shader compile" << endl;
+		return;
+	}
+
+	device->CreateGeometryShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), NULL, gs.GetAddressOf());
+}
 
 void D3DUtil::CreatePixelShader(ComPtr<ID3D11Device>& device, const wstring& fileName, ComPtr<ID3D11PixelShader>& ps)
 {
