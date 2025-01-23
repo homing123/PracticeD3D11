@@ -108,6 +108,7 @@ private:
 	Vector2 m_ImGuiLTopNS;
 	Vector2 m_ImGuiRBotNS;
 	bool m_MouseInGui;
+	bool m_MouseisDrag;
 
 	bool m_MoveMode;
 

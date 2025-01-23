@@ -11,6 +11,9 @@ void GraphicsPSO::SetMatKindAndCreateCBuffer(ComPtr<ID3D11Device>& device, E_Mat
 	case E_MatKind::BlinnPhong:
 		D3DUtil::CreateCBuffer(device, *static_cast<BlinnPhongCBuffer*>(m_MaterialCBufferCPU), m_MaterialCBufferGPU);
 		break;
+	case E_MatKind::IBL:
+		D3DUtil::CreateCBuffer(device, *static_cast<IBLCBuffer*>(m_MaterialCBufferCPU), m_MaterialCBufferGPU);
+		break;
 	case E_MatKind::PBR:
 		D3DUtil::CreateCBuffer(device, *static_cast<PBRCBuffer*>(m_MaterialCBufferCPU), m_MaterialCBufferGPU);
 		break;
@@ -48,6 +51,9 @@ void GraphicsPSO::UpdateMatCBuffer(ComPtr<ID3D11DeviceContext>& context)
 	{
 	case E_MatKind::BlinnPhong:
 		D3DUtil::UpdateCBuffer(context, *static_cast<BlinnPhongCBuffer*>(m_MaterialCBufferCPU), m_MaterialCBufferGPU);
+		break;
+	case E_MatKind::IBL:
+		D3DUtil::UpdateCBuffer(context, *static_cast<IBLCBuffer*>(m_MaterialCBufferCPU), m_MaterialCBufferGPU);
 		break;
 	case E_MatKind::PBR:
 		D3DUtil::UpdateCBuffer(context, *static_cast<PBRCBuffer*>(m_MaterialCBufferCPU), m_MaterialCBufferGPU);

@@ -31,7 +31,7 @@ __declspec(align(256)) struct GlobalCBuffer //b10
 	Matrix invViewProj;
 
 	Vector3 eyeWorld;
-	float iblStrength;
+	float iblStrength = 1;
 
 	Light lights[MAX_LIGHTS];
 };

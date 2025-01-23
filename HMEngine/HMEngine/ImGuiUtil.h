@@ -10,5 +10,5 @@ class ImGuiUtil
 {
 public:
 	const static void DrawTransform(Transform* pTF);
-	const static void DrawMaterial(MaterialCBuffer* pMat, const E_MatKind kind);
+	const static void DrawMaterial(ComPtr<ID3D11DeviceContext>& context, MaterialCBuffer* pMat, ComPtr<ID3D11Buffer>& cbuffer, const E_MatKind kind);
 };

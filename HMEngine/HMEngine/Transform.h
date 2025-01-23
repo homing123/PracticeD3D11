@@ -20,7 +20,7 @@ public:
 	const Vector3 GetScale() const;
 	const Matrix GetWorldMat() const;
 	const Vector3 GetForward() const;
-	const  Vector3 GetUp() const;
+	const Vector3 GetUp() const;
 	const Vector3 GetRight() const;
 
 	void SetPosition(const Vector3& _position);

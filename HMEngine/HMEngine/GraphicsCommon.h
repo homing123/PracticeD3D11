@@ -25,10 +25,15 @@ namespace Graphics
 	extern ComPtr<ID3D11VertexShader> BasicMeshVS;
 	extern ComPtr<ID3D11VertexShader> SkyboxVS;
 	extern ComPtr<ID3D11VertexShader> SamplingVS;
+	extern ComPtr<ID3D11VertexShader> BillboardVS;
+
+	extern ComPtr<ID3D11GeometryShader> BillboardGS;
 
 	extern ComPtr<ID3D11PixelShader> BlinnPhongPS;
+	extern ComPtr<ID3D11PixelShader> IBLPS;
 	extern ComPtr<ID3D11PixelShader> SkyboxPS;
 	extern ComPtr<ID3D11PixelShader> MousePickingPS;
+	extern ComPtr<ID3D11PixelShader> BillboardPS;
 
 	extern BlinnPhongCBuffer BlinnPhongMatCBuffer_0;
 	extern BlinnPhongCBuffer BlinnPhongMatCBuffer_1;
@@ -37,9 +42,11 @@ namespace Graphics
 
 	extern GraphicsPSO BlinnPhongPSO_0;
 	extern GraphicsPSO BlinnPhongPSO_1;
+	extern GraphicsPSO IBLPSO;
 	extern GraphicsPSO SkyboxPSO;
 	extern GraphicsPSO PBRPSO;
 	extern GraphicsPSO MousePickingPSO;
+	extern GraphicsPSO BillboardPSO;
 
 	void InitGraphics(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context);
 	void InitSampleState(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context);

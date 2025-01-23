@@ -17,8 +17,9 @@ void App::Start()
 	ComPtr<ID3D11Texture2D> tex;
 	ComPtr<ID3D11ShaderResourceView> srv;
 	LoadTexture("../Resource/Tex/UVTex.png", false, tex, srv, 1);
-	LoadModel("Sphere", MeshFactory::CreateSphere(1, 10, 10));
-	CreateObj("Sphere", "Sphere", &BlinnPhongPSO_0);
+	LoadModel("Sphere", MeshFactory::CreateSphere(1, 100, 100));
+	//CreateObj("IBL_Sphere", "Sphere", &IBLPSO);
+	CreateObj("BlinnPhong_Sphere_0", "Sphere", &BlinnPhongPSO_0);
 
 	//skybox
 	D3DUtil::CreateDDSTexture(m_Device, L"../Resource/CubeMap/SampleEnvHDR.dds", m_EnvIBLSRV, true);
@@ -50,7 +51,7 @@ void App::UpdateGUI()
 		{
 			Transform* pTF = m_SelectedObj->GetPTransform();
 			ImGuiUtil::DrawTransform(m_SelectedObj->GetPTransform());
-			ImGuiUtil::DrawMaterial(m_SelectedObj->m_PSO->m_MaterialCBufferCPU, m_SelectedObj->m_PSO->m_MatKind);
+			ImGuiUtil::DrawMaterial(m_Context, m_SelectedObj->m_PSO->m_MaterialCBufferCPU, m_SelectedObj->m_PSO->m_MaterialCBufferGPU, m_SelectedObj->m_PSO->m_MatKind);
 			ImGui::TreePop();
 		}
 	}
@@ -124,13 +125,14 @@ void App::Update(const float deltaTime)
 				if (m_MousePickingObjIdx >= 0)
 				{
 					m_SelectedObj = m_Objs[m_MousePickingObjIdx].get(); //imgui 영역은 제외해야함
+					m_MouseisDrag = true;
 				}
 				else
 				{
 					m_SelectedObj = nullptr;
 				}
 			}
-			if (isMouse(0) && isMouseDown(0) == false)
+			if (m_MouseisDrag && isMouse(0) && isMouseDown(0) == false)
 			{
 				if (m_SelectedObj != nullptr) 
 				{
@@ -163,8 +165,13 @@ void App::Update(const float deltaTime)
 				
 				if (isMouseUp(0))
 				{
+					m_MouseisDrag = false;
 				}
 			}
+		}
+		else
+		{
+			m_MouseisDrag = false;
 		}
 	}
 	
@@ -202,7 +209,7 @@ void App::Render()
 	//IBLTexture
 
 	//스카이박스
-	m_Skybox.Render(m_Context);
+	//m_Skybox.Render(m_Context);
 
 	//기본 오브젝트
 	int objCount = m_Objs.size();

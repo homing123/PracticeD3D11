@@ -17,6 +17,15 @@ using namespace std;
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
 
+enum E_ShaderKind
+{
+	VS,
+	HS,
+	DS,
+	GS,
+	PS,
+};
+
 inline void ThrowFail(HRESULT hr)
 {
 	if (FAILED(hr))
@@ -71,8 +80,31 @@ public:
 	static void CreateIndexBuffer(ComPtr<ID3D11Device>& device, const vector<uint32_t>& hBuffer, ComPtr<ID3D11Buffer>& dBuffer);
 	static bool CreateDepthBuffer(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DepthStencilView>& depthStencilView, const UINT width, const UINT height, const int qualitylevels);
 	static void SetViewport(ComPtr<ID3D11DeviceContext>& context, D3D11_VIEWPORT& screenViewport, const UINT width, const UINT height);
-	static void CreateVertexShaderAndInputLayout(ComPtr<ID3D11Device>& device, const wstring& fileName, const vector<D3D11_INPUT_ELEMENT_DESC>& inputElements, ComPtr<ID3D11VertexShader>& vertexShader, ComPtr<ID3D11InputLayout>& inputLayout);
-	static void CreatePixelShader(ComPtr<ID3D11Device>& device, const wstring& fileName, ComPtr<ID3D11PixelShader>& pixelShader);
+
+	template<typename T>
+	static void CreateShader(ComPtr<ID3D11Device>& device, const wstring& fileName, T& shader)
+	{
+		switch (T)
+		{
+		case ComPtr<ID3D11VertexShader>:
+
+			break;
+		case ComPtr<ID3D11HullShader>:
+			break;
+		case ComPtr<ID3D11HullShader>:
+			break;
+		case ComPtr<ID3D11HullShader>:
+			break;
+		case ComPtr<ID3D11HullShader>:
+			break;
+		}
+
+	}
+	static void CreateVertexShaderAndInputLayout(ComPtr<ID3D11Device>& device, const wstring& fileName, const vector<D3D11_INPUT_ELEMENT_DESC>& inputElements, ComPtr<ID3D11VertexShader>& vs, ComPtr<ID3D11InputLayout>& inputLayout);
+	static void CreateHullShader(ComPtr<ID3D11Device>& device, const wstring& fileName, ComPtr<ID3D11HullShader>& hs);
+	static void CreateDomainShader(ComPtr<ID3D11Device>& device, const wstring& fileName, ComPtr<ID3D11DomainShader>& ds);
+	static void CreateGeometryShader(ComPtr<ID3D11Device>& device, const wstring& fileName, ComPtr<ID3D11GeometryShader>& gs);
+	static void CreatePixelShader(ComPtr<ID3D11Device>& device, const wstring& fileName, ComPtr<ID3D11PixelShader>& ps);
 	static void CreateTexture(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, const string& filename, const bool useSRGB,
 		ComPtr<ID3D11Texture2D>& tex, ComPtr<ID3D11ShaderResourceView>& srv, const UINT mipLevel);
 	static void CreateDDSTexture(ComPtr<ID3D11Device>& device, const wchar_t* filename, ComPtr<ID3D11ShaderResourceView>& srv, bool isCubemap);

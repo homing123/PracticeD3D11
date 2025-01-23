@@ -25,22 +25,30 @@ namespace Graphics
 	ComPtr<ID3D11VertexShader> BasicMeshVS;
 	ComPtr<ID3D11VertexShader> SkyboxVS;
 	ComPtr<ID3D11VertexShader> SamplingVS;
+	ComPtr<ID3D11VertexShader> BillboardVS;
+
+	ComPtr<ID3D11GeometryShader> BillboardGS;
 
 	ComPtr<ID3D11PixelShader> BlinnPhongPS;
+	ComPtr<ID3D11PixelShader> IBLPS;
 	ComPtr<ID3D11PixelShader> SkyboxPS;
 	ComPtr<ID3D11PixelShader> MousePickingPS;
+	ComPtr<ID3D11PixelShader> BillboardPS;
 
 	BlinnPhongCBuffer BlinnPhongMatCBuffer_0;
 	BlinnPhongCBuffer BlinnPhongMatCBuffer_1;
+	IBLCBuffer IBLMatCBuffer;
 	SkyboxCBuffer SkyboxMatCBuffer;
 	MousePickingCBuffer MousePickingMatCBuffer;
 
 
 	GraphicsPSO BlinnPhongPSO_0;
 	GraphicsPSO BlinnPhongPSO_1;
+	GraphicsPSO IBLPSO;
 	GraphicsPSO SkyboxPSO;
 	GraphicsPSO PBRPSO;
 	GraphicsPSO MousePickingPSO;
+	GraphicsPSO BillboardPSO;
 
 }
 
@@ -152,10 +160,13 @@ void Graphics::InitShaders(ComPtr<ID3D11Device>& device)
 
 	D3DUtil::CreateVertexShaderAndInputLayout(device, L"VSBasicMesh.hlsl", vDesc, BasicMeshVS, BasicMeshInputLayout);
 	D3DUtil::CreateVertexShaderAndInputLayout(device, L"VSSkybox.hlsl", vDesc, SkyboxVS, SkyboxInputLayout);
+	D3DUtil::CreateVertexShaderAndInputLayout(device, L"VSBillboard.hlsl", vDesc, BillboardVS, BasicMeshInputLayout);
 	
 	D3DUtil::CreatePixelShader(device, L"PSBlinnPhong.hlsl", BlinnPhongPS);
+	D3DUtil::CreatePixelShader(device, L"PSIBL.hlsl", IBLPS);
 	D3DUtil::CreatePixelShader(device, L"PSSkybox.hlsl", SkyboxPS);
 	D3DUtil::CreatePixelShader(device, L"PSMousePicking.hlsl", MousePickingPS);
+	D3DUtil::CreatePixelShader(device, L"PSBillboard.hlsl", BillboardPS);
 }
 void Graphics::InitMaterial()
 {
@@ -163,6 +174,9 @@ void Graphics::InitMaterial()
 	BlinnPhongMatCBuffer_0.shininess = 0;
 	BlinnPhongMatCBuffer_0.diffuse = Vector3(0, 0, 0);
 	BlinnPhongMatCBuffer_0.specular = Vector3(0, 0, 0);
+
+	IBLMatCBuffer.diffuse = Vector3(1, 1, 1);
+	IBLMatCBuffer.specular = Vector3(1, 1, 1);
 
 
 
@@ -185,6 +199,14 @@ void Graphics::InitPSO(ComPtr<ID3D11Device>& device)
 	BlinnPhongPSO_1.m_BlendState = BasicBS;
 	BlinnPhongPSO_1.SetMatKindAndCreateCBuffer(device, E_MatKind::BlinnPhong, &BlinnPhongMatCBuffer_1);
 
+	IBLPSO.m_VS = BasicMeshVS;
+	IBLPSO.m_PS = IBLPS;
+	IBLPSO.m_InputLayout = BasicMeshInputLayout;
+	IBLPSO.m_RasterState = SolidCWRS;
+	IBLPSO.m_DepthStensilState = BasicDSS;
+	IBLPSO.m_BlendState = BasicBS;
+	IBLPSO.SetMatKindAndCreateCBuffer(device, E_MatKind::IBL, &IBLMatCBuffer);
+
 	SkyboxPSO.m_VS = SkyboxVS;
 	SkyboxPSO.m_PS = SkyboxPS;
 	SkyboxPSO.m_InputLayout = SkyboxInputLayout;
@@ -199,10 +221,5 @@ void Graphics::InitPSO(ComPtr<ID3D11Device>& device)
 	MousePickingPSO.m_RasterState = SolidCWRS;
 	MousePickingPSO.m_DepthStensilState = MousePickingDSS;
 	MousePickingPSO.m_BlendState = MousePickingBS;
-	D3D11_BLEND_DESC desc;
-	MousePickingBS.Get()->GetDesc(&desc);
-	D3D11_RENDER_TARGET_BLEND_DESC rtvDesc;
-	rtvDesc = desc.RenderTarget[0];
-
 	MousePickingPSO.SetMatKindAndCreateCBuffer(device, E_MatKind::MousePicking, &MousePickingMatCBuffer);
 }

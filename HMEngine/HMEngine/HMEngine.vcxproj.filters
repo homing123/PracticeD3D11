@@ -148,6 +148,18 @@
     <FxCompile Include="PSMousePicking.hlsl">
       <Filter>hlsl</Filter>
     </FxCompile>
+    <FxCompile Include="PSIBL.hlsl">
+      <Filter>hlsl</Filter>
+    </FxCompile>
+    <FxCompile Include="VSBillboard.hlsl">
+      <Filter>hlsl</Filter>
+    </FxCompile>
+    <FxCompile Include="GSBillboard.hlsl">
+      <Filter>hlsl</Filter>
+    </FxCompile>
+    <FxCompile Include="PSBillboard.hlsl">
+      <Filter>hlsl</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Common.hlsli">
@@ -157,6 +169,9 @@
       <Filter>hlsl</Filter>
     </None>
     <None Include="PBR.hlsli">
+      <Filter>hlsl</Filter>
+    </None>
+    <None Include="Billboard.hlsli">
       <Filter>hlsl</Filter>
     </None>
   </ItemGroup>

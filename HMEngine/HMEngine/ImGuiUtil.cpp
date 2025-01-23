@@ -19,7 +19,7 @@ const void ImGuiUtil::DrawTransform(Transform* pTF)
 		ImGui::TreePop();
 	}
 }
-const void ImGuiUtil::DrawMaterial(MaterialCBuffer* pMat, const E_MatKind kind)
+const void ImGuiUtil::DrawMaterial(ComPtr<ID3D11DeviceContext>& context, MaterialCBuffer* pMat, ComPtr<ID3D11Buffer>& cbuffer, const E_MatKind kind)
 {
 	if (ImGui::TreeNode("Material"))
 	{
@@ -27,11 +27,22 @@ const void ImGuiUtil::DrawMaterial(MaterialCBuffer* pMat, const E_MatKind kind)
 		{
 		case E_MatKind::BlinnPhong:
 		{
+			ImGui::Text("BlinnPhong");
 			BlinnPhongCBuffer* pBlinnPhong = static_cast<BlinnPhongCBuffer*>(pMat);
 			ImGui::SliderFloat3("Ambient", &pBlinnPhong->ambient.x, 0, 1);
 			ImGui::SliderFloat3("Diffuse", &pBlinnPhong->diffuse.x, 0, 1);
 			ImGui::SliderFloat3("Specular", &pBlinnPhong->specular.x, 0, 1);
 			ImGui::SliderFloat("Shininess", &pBlinnPhong->shininess, 0, 50);
+			D3DUtil::UpdateCBuffer(context, *pBlinnPhong, cbuffer);
+		}
+		break;
+		case E_MatKind::IBL:
+		{	
+			ImGui::Text("IBL");
+			IBLCBuffer* pCBuffer = static_cast<IBLCBuffer*>(pMat);
+			ImGui::SliderFloat3("Diffuse", &pCBuffer->diffuse.x, 0, 1);
+			ImGui::SliderFloat3("Specular", &pCBuffer->specular.x, 0, 1);
+			D3DUtil::UpdateCBuffer(context, *pCBuffer, cbuffer);
 		}
 		break;
 		case E_MatKind::PBR:

@@ -151,7 +151,7 @@ void D3DUtil::SetViewport(ComPtr<ID3D11DeviceContext>& context, D3D11_VIEWPORT& 
 	screenViewport.MaxDepth = 1.f;
 	context->RSSetViewports(1, &screenViewport);
 }
-void D3DUtil::CreateVertexShaderAndInputLayout(ComPtr<ID3D11Device>& device, const wstring& fileName, const vector<D3D11_INPUT_ELEMENT_DESC>& inputElements, ComPtr<ID3D11VertexShader>& vertexShader, ComPtr<ID3D11InputLayout>& inputLayout)
+void D3DUtil::CreateVertexShaderAndInputLayout(ComPtr<ID3D11Device>& device, const wstring& fileName, const vector<D3D11_INPUT_ELEMENT_DESC>& inputElements, ComPtr<ID3D11VertexShader>& vs, ComPtr<ID3D11InputLayout>& inputLayout)
 {
 	ComPtr<ID3DBlob> shaderBlob;
 	ComPtr<ID3DBlob> errorBlob;
@@ -186,14 +186,23 @@ void D3DUtil::CreateVertexShaderAndInputLayout(ComPtr<ID3D11Device>& device, con
 	{
 		std::cout << fileName.c_str() << " CreateInputLayout Failed" << endl;
 	}
-	hr = device->CreateVertexShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), NULL, vertexShader.GetAddressOf());
+	hr = device->CreateVertexShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), NULL, vs.GetAddressOf());
 	if (FAILED(hr))
 	{
 		std::cout << fileName.c_str() << " CreateVertexShader Failed" << endl;
 	}
 
 }
-void D3DUtil::CreatePixelShader(ComPtr<ID3D11Device>& device, const wstring& fileName, ComPtr<ID3D11PixelShader>& pixelShader)
+
+static void CreateHullShader(ComPtr<ID3D11Device>& device, const wstring& fileName, ComPtr<ID3D11HullShader>& hs)
+{}
+static void CreateDomainShader(ComPtr<ID3D11Device>& device, const wstring& fileName, ComPtr<ID3D11DomainShader>& ds)
+{}
+
+static void CreateGeometryShader(ComPtr<ID3D11Device>& device, const wstring& fileName, ComPtr<ID3D11GeometryShader>& gs)
+{}
+
+void D3DUtil::CreatePixelShader(ComPtr<ID3D11Device>& device, const wstring& fileName, ComPtr<ID3D11PixelShader>& ps)
 {
 	ComPtr<ID3DBlob> shaderBlob;
 	ComPtr<ID3DBlob> errorBlob;
@@ -223,7 +232,7 @@ void D3DUtil::CreatePixelShader(ComPtr<ID3D11Device>& device, const wstring& fil
 		return;
 	}
 
-	device->CreatePixelShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), NULL, pixelShader.GetAddressOf());
+	device->CreatePixelShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), NULL, ps.GetAddressOf());
 }
 
 

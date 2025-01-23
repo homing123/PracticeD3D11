@@ -7,15 +7,11 @@
 
 float4 main(PSInput i) : SV_TARGET
 {
+	return float4(1,1,1,1);
 	float3 view = normalize(eyeWorld - i.posWorld);
 
 	float3 color = float3(0, 0, 0);
 
-	float3 diffuseIBL = irradianceIBLTex.Sample(LinearClamp, i.normalWorld).rgb * material.diffuse;
-	float3 specularIBL = specularIBLTex.Sample(LinearClamp, reflect(-view, i.normalWorld)).rgb * material.specular;
-	color += (diffuseIBL + specularIBL) * iblStrength;
-
-	return float4(color, 1);
 	int idx = 0;
 
 	[unroll]
