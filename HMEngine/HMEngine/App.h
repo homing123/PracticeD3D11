@@ -10,6 +10,8 @@
 #include <imgui_impl_dx11.h>
 #include <imgui_impl_win32.h>
 #include "ImGuiUtil.h"
+#include <map>
+#include <algorithm>
 
 #include "Util.h"
 #include "GraphicsCommon.h"
@@ -48,6 +50,7 @@ public:
 	int Run();
 	GameObject* CreateObj(const string& name, const string& modelName, GraphicsPSO* pPSO);
 	GameObject* GetObj(const string& name);
+	void CreateLight(Light* pLight);
 	DirectionalLight* CreateDirectionalLight(Vector3& position, Vector3& euler, Vector3& strength);
 	PointLight* CreatePointLight(Vector3& position, Vector3& strength, float fallOffStart, float fallOffEnd);
 	SpotLight* CreateSpotLight(Vector3& position, Vector3& euler, Vector3& strength, float fallOffStart, float fallOffEnd, float spotPower);
@@ -101,9 +104,7 @@ private:
 	unordered_map<size_t, unique_ptr<Model>> m_Models;
 	unordered_map<size_t, ComPtr<ID3D11ShaderResourceView>> m_TexViews;
 	vector<shared_ptr<GameObject>> m_Objs;
-	vector<shared_ptr<DirectionalLight>> m_DirectionalLights;
-	vector<shared_ptr<PointLight>> m_PointLights;
-	vector<shared_ptr<SpotLight>> m_SpotLights;
+	vector<shared_ptr<Light>> m_Lights;
 
 	Camera m_Cam;
 	GameObject* m_Skybox;

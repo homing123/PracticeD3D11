@@ -34,11 +34,12 @@ void App::Start()
 	CreateObj("BlinnPhong_Sphere_0", "Sphere", &BlinnPhongPSO_0);
 
 	//light
-	DirectionalLight* pDLight_0 = CreateDirectionalLight();
-	DirectionalLight* pDLight_1 = CreateDirectionalLight();
-	PointLight* pPointLight_0 = CreatePointLight();
-	PointLight* pPointLight_1 = CreatePointLight();
-	SpotLight* pSpotLight_0 = CreateSpotLight();
+	CreateLight(new DirectionalLight(m_Device, Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(1, 1, 1)));
+	CreateLight(new DirectionalLight(m_Device, Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(1, 1, 1)));
+	CreateLight(new PointLight(m_Device, Vector3(0, 0, 0), Vector3(1, 1, 1), 0.1f, 1));
+	CreateLight(new PointLight(m_Device, Vector3(0, 0, 0), Vector3(1, 1, 1), 0.1f, 1));
+	CreateLight(new SpotLight(m_Device, Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(1, 1, 1), 0.1f, 1.0f, 10));
+	CreateLight(new SpotLight(m_Device, Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(1, 1, 1), 0.1f, 1.0f, 10));
 
 	//skybox
 	m_Skybox = new GameObject(m_Device, "Skybox", GetModel("Skybox"), &SkyboxPSO);
@@ -85,39 +86,25 @@ void App::UpdateGUI()
 		}
 		break;
 	case E_SelectedKind::SelectedKind_Light:
-		int directionalLightCount = m_DirectionalLights.size();
-		int pointLightCount = m_PointLights.size();
-		int spotLightCount = m_SpotLights.size();
-		if (m_SelectedIdx < directionalLightCount)
+		Light* selectedLight = m_Lights[m_SelectedIdx].get();
+		if (ImGui::TreeNode("Light"))
 		{
-			//directionalLight
-			DirectionalLight* pLight = m_DirectionalLights[m_SelectedIdx].get();
-			if (ImGui::TreeNode("Directional Light"))
-			{
-				ImGuiUtil::DrawTransform(pLight->GetPTransform());
-				ImGui::TreePop();
-			}
 
-		}
-		else if (m_SelectedIdx < directionalLightCount + pointLightCount)
-		{
-			//pointLight
-			DirectionalLight* pLight = m_DirectionalLights[m_SelectedIdx - directionalLightCount].get();
-			if (ImGui::TreeNode("Point Light"))
+			switch (selectedLight->GetLightType())
 			{
-				ImGuiUtil::DrawTransform(pLight->GetPTransform());
-				ImGui::TreePop();
+			case E_LightType::Directional:
+				ImGui::Text("Directional Light");
+				break;
+			case E_LightType::Point:
+				ImGui::Text("Point Light");
+				break;
+			case E_LightType::Spot:
+				ImGui::Text("Spot Light");
+				break;
 			}
-		}
-		else
-		{
-			//spotLight
-			DirectionalLight* pLight = m_DirectionalLights[m_SelectedIdx - directionalLightCount - pointLightCount].get();
-			if (ImGui::TreeNode("Spot Light"))
-			{
-				ImGuiUtil::DrawTransform(pLight->GetPTransform());
-				ImGui::TreePop();
-			}
+			ImGuiUtil::DrawTransform(selectedLight->GetPTransform());
+			ImGui::TreePop();
+
 		}
 		break;
 	}
@@ -224,24 +211,7 @@ void App::Update(const float deltaTime)
 							pTF = m_Objs[m_SelectedIdx].get()->GetPTransform();
 							break;
 						case E_SelectedKind::SelectedKind_Light:
-							int directionalLightCount = m_DirectionalLights.size();
-							int pointLightCount = m_PointLights.size();
-							int spotLightCount = m_SpotLights.size();
-							if (m_SelectedIdx < directionalLightCount)
-							{
-								pTF = m_DirectionalLights[m_SelectedIdx].get()->GetPTransform();
-								//directionalLight
-							}
-							else if (m_SelectedIdx < directionalLightCount + pointLightCount)
-							{
-								//pointLight
-								pTF = m_PointLights[m_SelectedIdx - directionalLightCount].get()->GetPTransform();
-							}
-							else
-							{
-								//spotLight
-								pTF = m_SpotLights[m_SelectedIdx - directionalLightCount - pointLightCount].get()->GetPTransform();
-							}
+							pTF = m_Lights[m_SelectedIdx].get()->GetPTransform();
 							break;
 						}
 						Vector3 worldPos = pTF->GetPosition();
@@ -299,57 +269,44 @@ void App::Render()
 	m_GlobalCBufferCPU.invViewProj = invViewProj.Transpose();
 	m_GlobalCBufferCPU.eyeWorld = eyeWorld;
 	D3DUtil::UpdateCBuffer(m_Context, m_GlobalCBufferCPU, m_GlobalCBufferGPU);
-
 	m_Context->VSSetConstantBuffers(GLOBAL_CBUFFER_SLOT, 1, m_GlobalCBufferGPU.GetAddressOf());
 	m_Context->GSSetConstantBuffers(GLOBAL_CBUFFER_SLOT, 1, m_GlobalCBufferGPU.GetAddressOf());
 	m_Context->PSSetConstantBuffers(GLOBAL_CBUFFER_SLOT, 1, m_GlobalCBufferGPU.GetAddressOf());
 
-	Vector3 r0 = m_GlobalCBufferCPU.view.Right();
-	Vector3 r1 = m_GlobalCBufferCPU.view.Up();
-	Vector3 r2 = -m_GlobalCBufferCPU.view.Forward();
+
 	//Update LightCBuffer
-	int directionalLightCount = m_DirectionalLights.size();
-	int pointLightCount = m_PointLights.size();
-	int spotLightCount = m_SpotLights.size();
-	int idx = 0;
-	for (int i = 0; i < directionalLightCount; i++)
+	int lightCount = m_Lights.size();
+	vector<Light*> vLightSort; //후에 빛의갯수가 많아지고 필드가 넓어지면 영향정도를 계산해서 갯수컷 해야함
+	vLightSort.resize(lightCount);
+	for (int i = 0; i < lightCount; i++)
 	{
-		if (idx < MAX_LIGHTS) 
-		{
-			m_DirectionalLights[i].get()->SetLightCBuffer(m_LightCBufferCPU.lights[idx]);
-			idx++;
-		}
+		vLightSort[i] = m_Lights[i].get();
 	}
-	for (int i = 0; i < pointLightCount; i++)
+	sort(vLightSort.begin(), vLightSort.end(), Light::CompareLightType);
+	int loopCount = lightCount > MAX_LIGHTS ? MAX_LIGHTS : lightCount;
+	for (int i = 0; i < loopCount; i++)
 	{
-		if (idx < MAX_LIGHTS)
-		{
-			m_PointLights[i].get()->SetLightCBuffer(m_LightCBufferCPU.lights[idx]);
-			idx++;
-		}
-	}
-	for (int i = 0; i < spotLightCount; i++)
-	{
-		if (idx < MAX_LIGHTS)
-		{
-			m_SpotLights[i].get()->SetLightCBuffer(m_LightCBufferCPU.lights[idx]);
-			idx++;
-		}
+		vLightSort[i]->SetLightCBuffer(m_LightCBufferCPU.lights[i]);
 	}
 	m_Context->PSGetConstantBuffers(LIGHT_CBUFFER_SLOT, 1, m_LightCBufferGPU.GetAddressOf());
 
+
+	//clear rtv, dsv
 	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	m_Context->ClearRenderTargetView(m_MainRTV.Get(), clearColor);
 	m_Context->ClearDepthStencilView(m_MainDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
-
 	m_Context->OMSetRenderTargets(1, m_MainRTV.GetAddressOf(), m_MainDSV.Get());
+	if (EditMode)
+	{
+		m_Context->ClearRenderTargetView(m_MousePickingRTV.Get(), clearColor);
+	}
 	
 	//IBLTexture
-
-	//스카이박스
+	
+	//SkyBox
 	m_Skybox->Render(m_Context);
 
-	//기본 오브젝트
+	//GameObjects
 	int objCount = m_Objs.size();
 	for (int i = 0; i < objCount; i++)
 	{
@@ -360,12 +317,9 @@ void App::Render()
 	//post effect
 
 	//post processing
-	//Mouse Picking
+
 	if (EditMode)
 	{
-		//draw billboard
-		m_Context->ClearRenderTargetView(m_MousePickingRTV.Get(), clearColor);
-
 		vector<ID3D11RenderTargetView*> vRtv = { m_MainRTV.Get(), m_MousePickingRTV.Get() };
 		m_Context->OMSetRenderTargets(2, vRtv.data(), m_MainDSV.Get());
 
@@ -374,39 +328,16 @@ void App::Render()
 		m_Context->PSSetShaderResources(0, 1, arr_srv.data());
 		BillboardPointImagePSO.RenderSetting(m_Context);
 		MousePickingCBuffer* cbufferCPU = static_cast<MousePickingCBuffer*>(BillboardPointImagePSO.m_MaterialCBufferCPU);
-		int idx = 0;
-		for (int i = 0; i < directionalLightCount; i++)
+
+		for (int i = 0; i < lightCount; i++)
 		{
-			Util::IdxToUINT3Color(objCount + idx + 1, r, g, b);
-			cbufferCPU->idx = i;
+			Util::IdxToUINT3Color(objCount + i + 1, r, g, b);
+			cbufferCPU->idx = objCount + i;
 			cbufferCPU->color[0] = r;
 			cbufferCPU->color[1] = g;
 			cbufferCPU->color[2] = b;
 			BillboardPointImagePSO.UpdateMatCBuffer(m_Context);
-			m_DirectionalLights[i]->Render(m_Context);
-			idx++;
-		}
-		for (int i = 0; i < pointLightCount; i++)
-		{
-			Util::IdxToUINT3Color(objCount + idx + 1, r, g, b);
-			cbufferCPU->idx = i;
-			cbufferCPU->color[0] = r;
-			cbufferCPU->color[1] = g;
-			cbufferCPU->color[2] = b;
-			BillboardPointImagePSO.UpdateMatCBuffer(m_Context);
-			m_PointLights[i]->Render(m_Context);
-			idx++;
-		}
-		for (int i = 0; i < spotLightCount; i++)
-		{
-			Util::IdxToUINT3Color(objCount + idx + 1, r, g, b);
-			cbufferCPU->idx = i;
-			cbufferCPU->color[0] = r;
-			cbufferCPU->color[1] = g;
-			cbufferCPU->color[2] = b;
-			BillboardPointImagePSO.UpdateMatCBuffer(m_Context);
-			m_SpotLights[i]->Render(m_Context);
-			idx++;
+			m_Lights[i].get()->Render(m_Context);
 		}
 		
 		//Mousepicking draw
@@ -484,48 +415,9 @@ GameObject* App::CreateObj(const string& name, const string& modelName, Graphics
 	return m_Objs.back().get();
 }	
 
-DirectionalLight* App::CreateDirectionalLight(Vector3& position, Vector3& euler, Vector3& strength)
+void App::CreateLight(Light* pLight)
 {
-	m_DirectionalLights.push_back(make_shared<DirectionalLight>(m_Device, position, euler, strength));
-	return m_DirectionalLights.back().get();
-}
-PointLight* App::CreatePointLight(Vector3& position, Vector3& strength, float fallOffStart, float fallOffEnd)
-{
-	m_PointLights.push_back(make_shared<PointLight>(m_Device, position, strength, fallOffStart, fallOffEnd));
-	return m_PointLights.back().get();
-}
-SpotLight* App::CreateSpotLight(Vector3& position, Vector3& euler, Vector3& strength, float fallOffStart, float fallOffEnd, float spotPower)
-{
-	m_SpotLights.push_back(make_shared<SpotLight>(m_Device, position, euler, strength, fallOffStart, fallOffEnd, spotPower));
-	return m_SpotLights.back().get();
-}
-DirectionalLight* App::CreateDirectionalLight()
-{
-	Vector3 pos = Vector3(0, 5, 0);
-	Vector3 euler = Vector3::Zero;
-	Vector3 strength = Vector3(1, 1, 1);
-	m_DirectionalLights.push_back(make_shared<DirectionalLight>(m_Device, pos, euler, strength));
-	return m_DirectionalLights.back().get();
-}
-PointLight* App::CreatePointLight()
-{
-	Vector3 pos = Vector3(0, 5, 0);
-	Vector3 strength = Vector3(1, 1, 1);
-	float fallOffStart = 0.1;
-	float fallOffEnd = 1.0f;
-	m_PointLights.push_back(make_shared<PointLight>(m_Device, pos, strength, fallOffStart, fallOffEnd));
-	return m_PointLights.back().get();
-}
-SpotLight* App::CreateSpotLight()
-{
-	Vector3 pos = Vector3(0, 5, 0);
-	Vector3 euler = Vector3(0, 0, 0);
-	Vector3 strength = Vector3(1, 1, 1);
-	float fallOffStart = 0.1;
-	float fallOffEnd = 1.0f;
-	float spotPower = 5;
-	m_SpotLights.push_back(make_shared<SpotLight>(m_Device, pos, euler, strength, fallOffStart, fallOffEnd, spotPower));
-	return m_SpotLights.back().get();
+	m_Lights.push_back(shared_ptr<Light>(pLight));
 }
 GameObject* App::GetObj(const string& name)
 {

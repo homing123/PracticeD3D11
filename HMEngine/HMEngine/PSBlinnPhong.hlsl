@@ -11,15 +11,15 @@ float4 main(PSInput i) : SV_TARGET
 	[unroll]
 	for (int idx = 0; idx < MAX_LIGHTS; idx++)
 	{
-		if (lights[idx].LightKind == LIGHT_DIRECTIONAL)
+		if (lights[idx].LightType == LIGHT_DIRECTIONAL)
 		{
 			color += ComputeDirectionalLight(lights[idx], material, i.normalWorld, view);
 		}
-		else if (lights[idx].LightKind == LIGHT_POINT)
+		else if (lights[idx].LightType == LIGHT_POINT)
 		{
 			color += ComputePointLight(lights[idx], material, i.posWorld, i.normalWorld, view);
 		}
-		else if (lights[idx].LightKind == LIGHT_SPOT)
+		else if (lights[idx].LightType == LIGHT_SPOT)
 		{
 			color += ComputeSpotLight(lights[idx], material, i.posWorld, i.normalWorld, view);
 		}

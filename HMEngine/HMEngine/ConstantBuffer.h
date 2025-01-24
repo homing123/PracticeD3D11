@@ -14,7 +14,7 @@ using DirectX::SimpleMath::Vector4;
 #define IBL_TEX_SLOT 10
 #define IBL_TEX_COUNT 4
 
-enum E_LightKind
+enum E_LightType
 {
 	None = 0,
 	Directional = 1,
@@ -23,7 +23,7 @@ enum E_LightKind
 };
 struct LightInfo
 {
-	E_LightKind LightKind;
+	E_LightType LightType;
 	Vector3 dummy;
 	Vector3 strength = Vector3(0.0f);
 	float fallOffStart = 0;

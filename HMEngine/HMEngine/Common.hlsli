@@ -11,7 +11,7 @@
 //모든 셰이더에서 공통으로 사용하는것들
 struct Light
 {
-	uint LightKind;
+	uint LightType;
 	float3 dummy;
 	float3 strength ;       // 12
 	float fallOffStart;                 // 4

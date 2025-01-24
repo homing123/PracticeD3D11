@@ -5,14 +5,25 @@ Transform* Light::GetPTransform()const { return m_Transform.get(); };
 const UINT Light::stride = sizeof(Vector3);
 const UINT Light::offset = 0;
 
-Light::Light(ComPtr<ID3D11Device>& device, Vector3& position, Vector3& strength)
+
+Light::Light(ComPtr<ID3D11Device>& device, Vector3& position, Vector3& strength, const E_LightType type)
 {
 	m_Transform = make_shared<Transform>(device);
 	m_Transform->SetPosition(position);
 	m_Strength = strength;
+	m_LightType = type;
 
 	D3DUtil::CreateBillboardVertexIndexBuffer(device, m_VertexBuffer, m_IndexBuffer);
 }
+const E_LightType Light::GetLightType() const
+{
+	return m_LightType;
+}	
+bool Light::CompareLightType(Light* a, Light* b)
+{
+	return a->m_LightType < b->m_LightType; //static_cast<int>(a->m_LightType) < static_cast<int>(b->m_LightType);
+}
+
 void Light::SetLightCBuffer(LightInfo& lightInfo)
 {
 
@@ -26,8 +37,8 @@ void Light::Render(ComPtr<ID3D11DeviceContext>& context)
 }
 
 
-DirectionalLight::DirectionalLight(ComPtr<ID3D11Device>& device, Vector3& position, Vector3& euler, Vector3& strength)
-	:Light(device, position, strength)
+DirectionalLight::DirectionalLight(ComPtr<ID3D11Device>& device, Vector3 position, Vector3 euler, Vector3 strength)
+	:Light(device, position, strength, E_LightType::Directional)
 {
 	m_Transform->SetEuler(euler);
 }
@@ -35,29 +46,29 @@ void DirectionalLight::SetLightCBuffer(LightInfo& lightInfo)
 {
 	//Light::SetLightCBuffer(cbuffer); //이걸로 부모함수 호출 가능
 
-	lightInfo.LightKind = E_LightKind::Directional;
+	lightInfo.LightType = E_LightType::Directional;
 	lightInfo.strength = m_Strength;
 	lightInfo.direction = m_Transform->GetForward();
 }
 
 
-PointLight::PointLight(ComPtr<ID3D11Device>& device, Vector3& position, Vector3& strength, float fallOffStart, float fallOffEnd)
-	:Light(device, position, strength)
+PointLight::PointLight(ComPtr<ID3D11Device>& device, Vector3 position, Vector3 strength, float fallOffStart, float fallOffEnd)
+	:Light(device, position, strength, E_LightType::Point)
 {
 	m_FallOffStart = fallOffStart;
 	m_FallOffEnd = fallOffEnd;
 }
 void PointLight::SetLightCBuffer(LightInfo& lightInfo)
 {
-	lightInfo.LightKind = E_LightKind::Point;
+	lightInfo.LightType = E_LightType::Point;
 	lightInfo.strength = m_Strength;
 	lightInfo.fallOffStart = m_FallOffStart;
 	lightInfo.fallOffEnd = m_FallOffEnd;
 	lightInfo.position = m_Transform->GetPosition();
 }
 
-SpotLight::SpotLight(ComPtr<ID3D11Device>& device, Vector3& position, Vector3& euler, Vector3& strength, float fallOffStart, float fallOffEnd, float spotPower)
-	:Light(device, position, strength)
+SpotLight::SpotLight(ComPtr<ID3D11Device>& device, Vector3 position, Vector3 euler, Vector3 strength, float fallOffStart, float fallOffEnd, float spotPower)
+	:Light(device, position, strength, E_LightType::Spot)
 {
 	m_Transform->SetEuler(euler);
 	m_FallOffStart = fallOffStart;
@@ -67,7 +78,7 @@ SpotLight::SpotLight(ComPtr<ID3D11Device>& device, Vector3& position, Vector3& e
 
 void SpotLight::SetLightCBuffer(LightInfo& lightInfo)
 {
-	lightInfo.LightKind = E_LightKind::Spot;
+	lightInfo.LightType = E_LightType::Spot;
 	lightInfo.strength = m_Strength;
 	lightInfo.fallOffStart = m_FallOffStart;
 	lightInfo.fallOffEnd = m_FallOffEnd;
