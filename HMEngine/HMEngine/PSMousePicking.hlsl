@@ -8,5 +8,5 @@ cbuffer MousePickingCBuffer : register(b0)
 
 uint4 main(PSInput i) : SV_TARGET
 {
-	return uint4(color, 1);
+	return uint4(color, 255);
 }

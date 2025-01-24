@@ -19,28 +19,29 @@ namespace Graphics
 	ComPtr<ID3D11BlendState> MousePickingBS;
 
 	ComPtr<ID3D11InputLayout> BasicMeshInputLayout;
-	ComPtr<ID3D11InputLayout> BillboardInputLayout;
+	ComPtr<ID3D11InputLayout> BillboardPointImageInputLayout;
 	ComPtr<ID3D11InputLayout> SkyboxInputLayout;
 	ComPtr<ID3D11InputLayout> SamplingInputLayout;
 
 	ComPtr<ID3D11VertexShader> BasicMeshVS;
 	ComPtr<ID3D11VertexShader> SkyboxVS;
 	ComPtr<ID3D11VertexShader> SamplingVS;
-	ComPtr<ID3D11VertexShader> BillboardVS;
+	ComPtr<ID3D11VertexShader> BillboardPointImageVS;
 
-	ComPtr<ID3D11GeometryShader> BillboardGS;
+	ComPtr<ID3D11GeometryShader> BillboardPointImageGS;
 
 	ComPtr<ID3D11PixelShader> BlinnPhongPS;
 	ComPtr<ID3D11PixelShader> IBLPS;
 	ComPtr<ID3D11PixelShader> SkyboxPS;
 	ComPtr<ID3D11PixelShader> MousePickingPS;
-	ComPtr<ID3D11PixelShader> BillboardPS;
+	ComPtr<ID3D11PixelShader> BillboardPointImagePS;
 
 	BlinnPhongCBuffer BlinnPhongMatCBuffer_0;
 	BlinnPhongCBuffer BlinnPhongMatCBuffer_1;
 	IBLCBuffer IBLMatCBuffer;
 	SkyboxCBuffer SkyboxMatCBuffer;
 	MousePickingCBuffer MousePickingMatCBuffer;
+	MousePickingCBuffer BillboardPointImageMatCBuffer;
 
 
 	GraphicsPSO BlinnPhongPSO_0;
@@ -49,7 +50,7 @@ namespace Graphics
 	GraphicsPSO SkyboxPSO;
 	GraphicsPSO PBRPSO;
 	GraphicsPSO MousePickingPSO;
-	GraphicsPSO BillboardPSO;
+	GraphicsPSO BillboardPointImagePSO;
 
 }
 
@@ -110,7 +111,7 @@ void Graphics::InitDepthStencilState(ComPtr<ID3D11Device>& device)
 	ZeroMemory(&desc, sizeof(desc));
 	desc.DepthEnable = true;
 	desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	desc.DepthFunc = D3D11_COMPARISON_LESS;
+	desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 	desc.StencilEnable = false;
 	ThrowFail(device->CreateDepthStencilState(&desc, BasicDSS.GetAddressOf()));
 
@@ -145,6 +146,8 @@ void Graphics::InitShaders(ComPtr<ID3D11Device>& device)
 	desc.AlignedByteOffset = 0;
 	vDesc.push_back(desc);
 
+	D3DUtil::CreateVertexShaderAndInputLayout(device, L"VSBillboardPointImage.hlsl", vDesc, BillboardPointImageVS, BillboardPointImageInputLayout);
+
 	desc.SemanticName = "NORMAL";
 	desc.AlignedByteOffset = 4 * 3;
 	vDesc.push_back(desc);
@@ -161,15 +164,14 @@ void Graphics::InitShaders(ComPtr<ID3D11Device>& device)
 
 	D3DUtil::CreateVertexShaderAndInputLayout(device, L"VSBasicMesh.hlsl", vDesc, BasicMeshVS, BasicMeshInputLayout);
 	D3DUtil::CreateVertexShaderAndInputLayout(device, L"VSSkybox.hlsl", vDesc, SkyboxVS, SkyboxInputLayout);
-	D3DUtil::CreateVertexShaderAndInputLayout(device, L"VSBillboard.hlsl", vDesc, BillboardVS, BillboardInputLayout);
 	
-	D3DUtil::CreateGeometryShader(device, L"GSBillboard.hlsl", BillboardGS);
+	D3DUtil::CreateGeometryShader(device, L"GSBillboardPointImage.hlsl", BillboardPointImageGS);
 
 	D3DUtil::CreatePixelShader(device, L"PSBlinnPhong.hlsl", BlinnPhongPS);
 	D3DUtil::CreatePixelShader(device, L"PSIBL.hlsl", IBLPS);
 	D3DUtil::CreatePixelShader(device, L"PSSkybox.hlsl", SkyboxPS);
 	D3DUtil::CreatePixelShader(device, L"PSMousePicking.hlsl", MousePickingPS);
-	D3DUtil::CreatePixelShader(device, L"PSBillboard.hlsl", BillboardPS);
+	D3DUtil::CreatePixelShader(device, L"PSBillboardPointImage.hlsl", BillboardPointImagePS);
 }
 void Graphics::InitMaterial()
 {
@@ -226,12 +228,14 @@ void Graphics::InitPSO(ComPtr<ID3D11Device>& device)
 	MousePickingPSO.m_BlendState = MousePickingBS;
 	MousePickingPSO.SetMatKindAndCreateCBuffer(device, E_MatKind::MousePicking, &MousePickingMatCBuffer);
 
-	BillboardPSO.m_VS = BillboardVS;
-	BillboardPSO.m_GS = BillboardGS;
-	BillboardPSO.m_PS = BillboardPS;
-	BillboardPSO.m_InputLayout = BasicMeshInputLayout;
-	BillboardPSO.m_RasterState = SolidCWRS;
-	BillboardPSO.m_DepthStensilState = BasicDSS;
-	BillboardPSO.m_BlendState = BasicBS;
+	BillboardPointImagePSO.m_VS = BillboardPointImageVS;
+	BillboardPointImagePSO.m_GS = BillboardPointImageGS;
+	BillboardPointImagePSO.m_PS = BillboardPointImagePS;
+	BillboardPointImagePSO.m_InputLayout = BillboardPointImageInputLayout;
+	BillboardPointImagePSO.m_RasterState = SolidCWRS;
+	BillboardPointImagePSO.m_DepthStensilState = BasicDSS;
+	BillboardPointImagePSO.m_BlendState = BasicBS;
+	BillboardPointImagePSO.SetMatKindAndCreateCBuffer(device, E_MatKind::MousePicking, &BillboardPointImageMatCBuffer);
+	BillboardPointImagePSO.m_PrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_POINTLIST;
 
 }

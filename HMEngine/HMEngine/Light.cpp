@@ -2,20 +2,32 @@
 
 Transform* Light::GetPTransform()const { return m_Transform.get(); };
 
-Light::Light(Vector3& position, Vector3& strength)
+const UINT Light::stride = sizeof(Vector3);
+const UINT Light::offset = 0;
+
+Light::Light(ComPtr<ID3D11Device>& device, Vector3& position, Vector3& strength)
 {
-	m_Transform = make_shared<Transform>();
+	m_Transform = make_shared<Transform>(device);
 	m_Transform->SetPosition(position);
 	m_Strength = strength;
+
+	D3DUtil::CreateBillboardVertexIndexBuffer(device, m_VertexBuffer, m_IndexBuffer);
 }
 void Light::SetLightCBuffer(LightInfo& lightInfo)
 {
 
 }
+void Light::Render(ComPtr<ID3D11DeviceContext>& context)
+{
+	m_Transform->SetTransformCBuffer(context);
+	context->IASetVertexBuffers(0, 1, m_VertexBuffer.GetAddressOf(), &stride, &offset);
+	context->IASetIndexBuffer(m_IndexBuffer.Get(), DXGI_FORMAT_R32_UINT, offset);
+	context->Draw(1, 0);
+}
 
 
-DirectionalLight::DirectionalLight(Vector3& position, Vector3& euler, Vector3& strength)
-	:Light(position, strength)
+DirectionalLight::DirectionalLight(ComPtr<ID3D11Device>& device, Vector3& position, Vector3& euler, Vector3& strength)
+	:Light(device, position, strength)
 {
 	m_Transform->SetEuler(euler);
 }
@@ -29,8 +41,8 @@ void DirectionalLight::SetLightCBuffer(LightInfo& lightInfo)
 }
 
 
-PointLight::PointLight(Vector3& position, Vector3& strength, float fallOffStart, float fallOffEnd)
-	:Light(position, strength)
+PointLight::PointLight(ComPtr<ID3D11Device>& device, Vector3& position, Vector3& strength, float fallOffStart, float fallOffEnd)
+	:Light(device, position, strength)
 {
 	m_FallOffStart = fallOffStart;
 	m_FallOffEnd = fallOffEnd;
@@ -44,8 +56,8 @@ void PointLight::SetLightCBuffer(LightInfo& lightInfo)
 	lightInfo.position = m_Transform->GetPosition();
 }
 
-SpotLight::SpotLight(Vector3& position, Vector3& euler, Vector3& strength, float fallOffStart, float fallOffEnd, float spotPower)
-	:Light(position, strength)
+SpotLight::SpotLight(ComPtr<ID3D11Device>& device, Vector3& position, Vector3& euler, Vector3& strength, float fallOffStart, float fallOffEnd, float spotPower)
+	:Light(device, position, strength)
 {
 	m_Transform->SetEuler(euler);
 	m_FallOffStart = fallOffStart;

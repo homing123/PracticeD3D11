@@ -13,15 +13,60 @@ void D3DUtil::CreateVertexBuffer(ComPtr<ID3D11Device>& device, const vector<Vert
 	vertexBufferDesc.CPUAccessFlags = 0;
 	vertexBufferDesc.StructureByteStride = sizeof(Vertex);
 
-	D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
-	vertexBufferData.pSysMem = hBuffer.data();
-	vertexBufferData.SysMemPitch = 0; //텍스쳐 줄 시작 에서 다음 줄 까지의 거리	2D, 3D 텍스쳐만 사용
-	vertexBufferData.SysMemSlicePitch = 0; //텍스쳐 깊이 시작에서 다음 깊이 까지의 거리 3D 텍스쳐만 사용
+	D3D11_SUBRESOURCE_DATA vBufferData = { 0 };
+	vBufferData.pSysMem = hBuffer.data();
+	vBufferData.SysMemPitch = 0; //텍스쳐 줄 시작 에서 다음 줄 까지의 거리	2D, 3D 텍스쳐만 사용
+	vBufferData.SysMemSlicePitch = 0; //텍스쳐 깊이 시작에서 다음 깊이 까지의 거리 3D 텍스쳐만 사용
 
-	HRESULT hResult = device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, dBuffer.GetAddressOf());
+	HRESULT hResult = device->CreateBuffer(&vertexBufferDesc, &vBufferData, dBuffer.GetAddressOf());
 	if (FAILED(hResult))
 	{
 		cout << " Create VertexBuffer Failed" << endl;
+		return;
+	}
+}
+void D3DUtil::CreateBillboardVertexIndexBuffer(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Buffer>& vertexBuffer,ComPtr<ID3D11Buffer>& indexBuffer)
+{
+	D3D11_BUFFER_DESC vertexBufferDesc;
+	ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE; //초기화 후 변경 X
+	vertexBufferDesc.ByteWidth = UINT(sizeof(Vector3));
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBufferDesc.CPUAccessFlags = 0;
+	vertexBufferDesc.StructureByteStride = sizeof(Vector3);
+
+	D3D11_SUBRESOURCE_DATA vBufferData = { 0 };
+	vector<Vector3> vertexData = { Vector3::Zero };
+	vBufferData.pSysMem = vertexData.data();
+	vBufferData.SysMemPitch = 0;
+	vBufferData.SysMemSlicePitch = 0;
+
+	HRESULT hResult = device->CreateBuffer(&vertexBufferDesc, &vBufferData, vertexBuffer.GetAddressOf());
+	if (FAILED(hResult))
+	{
+		cout << " Create Billboard VertexBuffer Failed" << endl;
+		return;
+	}
+
+	//인덱스 버퍼
+	D3D11_BUFFER_DESC indexBufferDesc;
+	ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	indexBufferDesc.ByteWidth = UINT(sizeof(UINT32));
+	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	indexBufferDesc.CPUAccessFlags = 0;
+	indexBufferDesc.StructureByteStride = sizeof(UINT32);
+
+	D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
+	vector<UINT32> indexData = { 0 };
+	indexBufferData.pSysMem = indexData.data();
+	indexBufferData.SysMemPitch = 0;
+	indexBufferData.SysMemSlicePitch = 0;
+
+	hResult = device->CreateBuffer(&indexBufferDesc, &indexBufferData, indexBuffer.GetAddressOf());
+	if (FAILED(hResult))
+	{
+		cout << "Create Billboard IndexBuffer Failed" << endl;
 		return;
 	}
 }

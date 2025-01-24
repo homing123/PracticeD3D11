@@ -3,21 +3,20 @@
 
 const void ImGuiUtil::DrawTransform(Transform* pTF)
 {
-	if (ImGui::TreeNode("Transform")) 
-	{
-		Vector3 pos = pTF->GetPosition();
-		Vector3 rot = pTF->GetRotation().ToEuler();
-		Vector3 scale = pTF->GetScale();
+	ImGui::Text("Transform");
+	
+	Vector3 pos = pTF->GetPosition();
+	Vector3 rot = pTF->GetRotation().ToEuler();
+	Vector3 scale = pTF->GetScale();
 
-		ImGui::DragFloat3("Position", &pos.x, 0.05f);
-		ImGui::DragFloat3("Rotation", &rot.x, 0.01f);
-		ImGui::DragFloat3("Scale", &scale.x, 0.02f);
+	ImGui::DragFloat3("Position", &pos.x, 0.05f);
+	ImGui::DragFloat3("Rotation", &rot.x, 0.01f);
+	ImGui::DragFloat3("Scale", &scale.x, 0.02f);
 
-		pTF->SetPosition(pos);
-		pTF->SetEuler(rot);
-		pTF->SetScale(scale);
-		ImGui::TreePop();
-	}
+	pTF->SetPosition(pos);
+	pTF->SetEuler(rot);
+	pTF->SetScale(scale);
+	
 }
 const void ImGuiUtil::DrawMaterial(ComPtr<ID3D11DeviceContext>& context, MaterialCBuffer* pMat, ComPtr<ID3D11Buffer>& cbuffer, const E_MatKind kind)
 {

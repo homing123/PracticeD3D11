@@ -19,22 +19,22 @@ namespace Graphics
 	extern ComPtr<ID3D11BlendState> MousePickingBS;
 
 	extern ComPtr<ID3D11InputLayout> BasicMeshInputLayout;
-	extern ComPtr<ID3D11InputLayout> BillboardInputLayout;
+	extern ComPtr<ID3D11InputLayout> BillboardPointImageInputLayout;
 	extern ComPtr<ID3D11InputLayout> SkyboxInputLayout;
 	extern ComPtr<ID3D11InputLayout> SamplingInputLayout;
 
 	extern ComPtr<ID3D11VertexShader> BasicMeshVS;
 	extern ComPtr<ID3D11VertexShader> SkyboxVS;
 	extern ComPtr<ID3D11VertexShader> SamplingVS;
-	extern ComPtr<ID3D11VertexShader> BillboardVS;
+	extern ComPtr<ID3D11VertexShader> BillboardPointImageVS;
 
-	extern ComPtr<ID3D11GeometryShader> BillboardGS;
+	extern ComPtr<ID3D11GeometryShader> BillboardPointImageGS;
 
 	extern ComPtr<ID3D11PixelShader> BlinnPhongPS;
 	extern ComPtr<ID3D11PixelShader> IBLPS;
 	extern ComPtr<ID3D11PixelShader> SkyboxPS;
 	extern ComPtr<ID3D11PixelShader> MousePickingPS;
-	extern ComPtr<ID3D11PixelShader> BillboardPS;
+	extern ComPtr<ID3D11PixelShader> BillboardPointImagePS;
 
 	extern BlinnPhongCBuffer BlinnPhongMatCBuffer_0;
 	extern BlinnPhongCBuffer BlinnPhongMatCBuffer_1;
@@ -47,7 +47,7 @@ namespace Graphics
 	extern GraphicsPSO SkyboxPSO;
 	extern GraphicsPSO PBRPSO;
 	extern GraphicsPSO MousePickingPSO;
-	extern GraphicsPSO BillboardPSO;
+	extern GraphicsPSO BillboardPointImagePSO;
 
 	void InitGraphics(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context);
 	void InitSampleState(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context);

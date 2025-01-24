@@ -32,6 +32,12 @@ extern const float ToDegree;
 extern const float ToRadian;
 extern const bool EditMode;
 
+enum E_SelectedKind
+{
+	SelectedKind_None,
+	SelectedKind_GameObject,
+	SelectedKind_Light
+};
 class App
 {
 public:
@@ -50,8 +56,8 @@ public:
 	SpotLight* CreateSpotLight();
 
 	Model* GetModel(const string& name);
-	ID3D11ShaderResourceView* GetTexView(const string& name);
-	void LoadTexture(const string& filename, const bool useSRGB, ComPtr<ID3D11Texture2D>& tex, ComPtr<ID3D11ShaderResourceView>& srv, const UINT mipLevel);
+	ComPtr<ID3D11ShaderResourceView> GetTexView(const string& name);
+	void LoadTexture(const string& key, const string& filename, const bool useSRGB, const UINT mipLevel);
 	void LoadModel(const string& modelName, MeshData meshData);
 	const bool isKeyDown(UINT key)const;
 	const bool isKeyUp(UINT key)const;
@@ -87,9 +93,10 @@ private:
 	ComPtr<ID3D11Texture2D> m_MousePickingTex;
 	ComPtr<ID3D11RenderTargetView> m_MousePickingRTV;
 	ComPtr<ID3D11Texture2D> m_MousePickingStagingTex;
-	int m_MousePickingObjIdx = -1;
-	GameObject* m_SelectedObj = nullptr;
 
+	int m_MouseCursorColorValue = -1; //커서가 있는곳의 mousepicking rtv 의 컬러값 - 1
+	int m_SelectedIdx = 0;
+	E_SelectedKind m_SelectedKind = SelectedKind_None;
 
 	unordered_map<size_t, unique_ptr<Model>> m_Models;
 	unordered_map<size_t, ComPtr<ID3D11ShaderResourceView>> m_TexViews;
@@ -99,7 +106,7 @@ private:
 	vector<shared_ptr<SpotLight>> m_SpotLights;
 
 	Camera m_Cam;
-	GameObject m_Skybox;
+	GameObject* m_Skybox;
 	ComPtr<ID3D11ShaderResourceView> m_EnvIBLSRV;
 	ComPtr<ID3D11ShaderResourceView> m_DiffuseIBLSRV;
 	ComPtr<ID3D11ShaderResourceView> m_SpecularIBLSRV;

@@ -20,10 +20,7 @@ void GameObject::Render(ComPtr<ID3D11DeviceContext>& context)
 {	
 	if (m_Active == true && m_PSO != nullptr && m_Model != nullptr)
 	{
-		if (m_Transform != nullptr)
-		{
-			m_Transform->SetTransformCBuffer(context);
-		}
+		m_Transform->SetTransformCBuffer(context);
 		m_PSO->RenderSetting(context);
 		for (const auto& mesh : m_Model->m_meshes)
 		{

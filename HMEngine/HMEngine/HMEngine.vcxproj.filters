@@ -157,13 +157,13 @@
     <FxCompile Include="PSIBL.hlsl">
       <Filter>hlsl</Filter>
     </FxCompile>
-    <FxCompile Include="VSBillboard.hlsl">
+    <FxCompile Include="VSBillboardPointImage.hlsl">
       <Filter>hlsl</Filter>
     </FxCompile>
-    <FxCompile Include="GSBillboard.hlsl">
+    <FxCompile Include="PSBillboardPointImage.hlsl">
       <Filter>hlsl</Filter>
     </FxCompile>
-    <FxCompile Include="PSBillboard.hlsl">
+    <FxCompile Include="GSBillboardPointImage.hlsl">
       <Filter>hlsl</Filter>
     </FxCompile>
   </ItemGroup>
@@ -177,7 +177,7 @@
     <None Include="PBR.hlsli">
       <Filter>hlsl</Filter>
     </None>
-    <None Include="Billboard.hlsli">
+    <None Include="BillboardPointImage.hlsli">
       <Filter>hlsl</Filter>
     </None>
   </ItemGroup>

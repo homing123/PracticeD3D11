@@ -12,7 +12,6 @@ using Microsoft::WRL::ComPtr;
 class GameObject
 {
 public:
-	GameObject() {};
 	GameObject(ComPtr<ID3D11Device>& device, const string& name, Model* pModel, GraphicsPSO* pPSO);
 	string m_Name;
 	size_t m_NameKey = 0;
@@ -26,6 +25,7 @@ public:
 	Model* m_Model = nullptr;
 
 private:
+	GameObject() = default;
 	static vector<shared_ptr<GameObject>> Objs;
 
 	shared_ptr<Transform> m_Transform;

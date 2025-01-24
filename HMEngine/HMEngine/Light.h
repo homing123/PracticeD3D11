@@ -6,27 +6,33 @@ class Light
 {
 public:
 	Light() = default;
-	Light(Vector3& position, Vector3& strength);
+	Light(ComPtr<ID3D11Device>& device, Vector3& position, Vector3& strength);
 	Vector3 m_Strength;
 
 	Transform* GetPTransform()const;
 	virtual void SetLightCBuffer(LightInfo& lightInfo);
+	void Render(ComPtr<ID3D11DeviceContext>& context);
 
 protected:
 	shared_ptr<Transform> m_Transform;
+	ComPtr<ID3D11Buffer> m_VertexBuffer;
+	ComPtr<ID3D11Buffer> m_IndexBuffer;
+
+	const static UINT stride;
+	const static UINT offset;
 };
 
 class DirectionalLight : public Light
 {
 public:
-	DirectionalLight(Vector3& position, Vector3& euler, Vector3& strength);
+	DirectionalLight(ComPtr<ID3D11Device>& device, Vector3& position, Vector3& euler, Vector3& strength);
 
 	void SetLightCBuffer(LightInfo& lightInfo);
 };
 class PointLight : public Light
 {
 public:
-	PointLight(Vector3& position, Vector3& strength, float fallOffStart, float fallOffEnd);
+	PointLight(ComPtr<ID3D11Device>& device, Vector3& position, Vector3& strength, float fallOffStart, float fallOffEnd);
 
 	float m_FallOffStart;
 	float m_FallOffEnd;
@@ -35,7 +41,7 @@ public:
 class SpotLight :public Light
 {
 public:
-	SpotLight(Vector3& position, Vector3& euler, Vector3& strength, float fallOffStart, float fallOffEnd, float spotPower);
+	SpotLight(ComPtr<ID3D11Device>& device, Vector3& position, Vector3& euler, Vector3& strength, float fallOffStart, float fallOffEnd, float spotPower);
 
 	float m_FallOffStart;
 	float m_FallOffEnd;

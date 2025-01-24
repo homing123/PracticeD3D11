@@ -5,21 +5,29 @@ const float ToDegree = 180 / PI;
 const float ToRadian = PI / 180;
 const bool EditMode = true;
 
+const string UVTexKey = "UVTex";
+const string UVTexPath = "../Resource/Tex/UVTex.png";
+const string LightIconKey = "LightIcon";
+const string LightIconPath = "../Resource/Tex/LightIcon.png";
+
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 
 
 App* App::pIns = nullptr;
 
+
 void App::Start()
 {
 	//texture
-	ComPtr<ID3D11Texture2D> tex;
-	ComPtr<ID3D11ShaderResourceView> srv;
-	LoadTexture("../Resource/Tex/UVTex.png", false, tex, srv, 1);
-	LoadTexture("../Resource/Tex/LightIcon.png", false, tex, srv, 1);
+
+	LoadTexture(UVTexKey, UVTexPath, false, 1);
+	LoadTexture(LightIconKey, LightIconPath, false, 1);
 
 	//model
 	LoadModel("Sphere", MeshFactory::CreateSphere(1, 100, 100));
+	LoadModel("Skybox", MeshFactory::CreateBox(40));
+	LoadModel("Billboard", MeshFactory::CreateSquare(1));
 
 	//object
 	//CreateObj("IBL_Sphere", "Sphere", &IBLPSO);
@@ -33,39 +41,87 @@ void App::Start()
 	SpotLight* pSpotLight_0 = CreateSpotLight();
 
 	//skybox
+	m_Skybox = new GameObject(m_Device, "Skybox", GetModel("Skybox"), &SkyboxPSO);
 	D3DUtil::CreateDDSTexture(m_Device, L"../Resource/CubeMap/SampleEnvHDR.dds", m_EnvIBLSRV, true);
 	D3DUtil::CreateDDSTexture(m_Device, L"../Resource/CubeMap/SampleDiffuseHDR.dds", m_DiffuseIBLSRV, true);
 	D3DUtil::CreateDDSTexture(m_Device, L"../Resource/CubeMap/SampleSpecularHDR.dds", m_SpecularIBLSRV, true);
 	D3DUtil::CreateDDSTexture(m_Device, L"../Resource/CubeMap/SampleBrdf.dds", m_BRDFIBLSRV, false);
 	vector<ID3D11ShaderResourceView*> vIBLSRV = { m_EnvIBLSRV.Get(), m_DiffuseIBLSRV.Get(), m_SpecularIBLSRV.Get(), m_BRDFIBLSRV.Get()};
 	m_Context->PSSetShaderResources(IBL_TEX_SLOT, IBL_TEX_COUNT, vIBLSRV.data());
-	m_Skybox.m_Model = new Model(m_Device, m_Context, { MeshFactory::CreateBox(40) });
-	m_Skybox.m_PSO = &SkyboxPSO;
 
 	//카메라 정보 설정
 	m_Cam.ChangeScreenSize(m_ScreenWidth, m_ScreenHeight);
 	m_Cam.GetPTransform()->SetPosition(Vector3(0, 0, -5));
-
+	//m_Cam.GetPTransform()->SetEuler(Vector3(0, 90 * ToRadian, 0));
 }
 void App::UpdateGUI()
 {
 	//rendering option
 	ImGui::Checkbox("MoveMode", &m_MoveMode);
+	if (m_MoveMode)
+	{
+		ImGui::Text("Camera");
+		ImGuiUtil::DrawTransform(m_Cam.GetPTransform());
+	}
 	if (ImGui::TreeNode("IBL"))
 	{
 		ImGui::SliderFloat("IBL_Strength", &m_GlobalCBufferCPU.iblStrength, 0, 1);
 		ImGui::TreePop();
 	}
-	if (m_SelectedObj != nullptr)
+	
+	switch (m_SelectedKind)
 	{
-		if (ImGui::TreeNode(m_SelectedObj->m_Name.c_str()))
+	case E_SelectedKind::SelectedKind_GameObject:
 		{
-			Transform* pTF = m_SelectedObj->GetPTransform();
-			ImGuiUtil::DrawTransform(m_SelectedObj->GetPTransform());
-			ImGuiUtil::DrawMaterial(m_Context, m_SelectedObj->m_PSO->m_MaterialCBufferCPU, m_SelectedObj->m_PSO->m_MaterialCBufferGPU, m_SelectedObj->m_PSO->m_MatKind);
-			ImGui::TreePop();
+			GameObject* selectedObj = m_Objs[m_SelectedIdx].get();
+			if (ImGui::TreeNode(selectedObj->m_Name.c_str()))
+			{
+				Transform* pTF = selectedObj->GetPTransform();
+				ImGuiUtil::DrawTransform(selectedObj->GetPTransform());
+				GraphicsPSO* pPSO = selectedObj->m_PSO;
+				ImGuiUtil::DrawMaterial(m_Context, pPSO->m_MaterialCBufferCPU, pPSO->m_MaterialCBufferGPU, pPSO->m_MatKind);
+				ImGui::TreePop();
+			}
 		}
+		break;
+	case E_SelectedKind::SelectedKind_Light:
+		int directionalLightCount = m_DirectionalLights.size();
+		int pointLightCount = m_PointLights.size();
+		int spotLightCount = m_SpotLights.size();
+		if (m_SelectedIdx < directionalLightCount)
+		{
+			//directionalLight
+			DirectionalLight* pLight = m_DirectionalLights[m_SelectedIdx].get();
+			if (ImGui::TreeNode("Directional Light"))
+			{
+				ImGuiUtil::DrawTransform(pLight->GetPTransform());
+				ImGui::TreePop();
+			}
+
+		}
+		else if (m_SelectedIdx < directionalLightCount + pointLightCount)
+		{
+			//pointLight
+			DirectionalLight* pLight = m_DirectionalLights[m_SelectedIdx - directionalLightCount].get();
+			if (ImGui::TreeNode("Point Light"))
+			{
+				ImGuiUtil::DrawTransform(pLight->GetPTransform());
+				ImGui::TreePop();
+			}
+		}
+		else
+		{
+			//spotLight
+			DirectionalLight* pLight = m_DirectionalLights[m_SelectedIdx - directionalLightCount - pointLightCount].get();
+			if (ImGui::TreeNode("Spot Light"))
+			{
+				ImGuiUtil::DrawTransform(pLight->GetPTransform());
+				ImGui::TreePop();
+			}
+		}
+		break;
 	}
+	
 
 	//ImGui area ignore
 	ImVec2 imguiPos = ImGui::GetWindowPos();
@@ -133,24 +189,61 @@ void App::Update(const float deltaTime)
 		{
 			if (isMouseDown(0))
 			{
-				if (m_MousePickingObjIdx >= 0)
+				if (m_MouseCursorColorValue >= 0)
 				{
-					m_SelectedObj = m_Objs[m_MousePickingObjIdx].get(); //imgui 영역은 제외해야함
+					int objCount = m_Objs.size();
+					if (m_MouseCursorColorValue < objCount)
+					{
+						m_SelectedKind = SelectedKind_GameObject;
+						m_SelectedIdx = m_MouseCursorColorValue;
+					}
+					else
+					{
+						m_SelectedKind = SelectedKind_Light;
+						m_SelectedIdx = m_MouseCursorColorValue - objCount;
+					}
 					m_MouseisDrag = true;
 				}
 				else
 				{
-					m_SelectedObj = nullptr;
+					m_SelectedKind = SelectedKind_None;
+					m_SelectedIdx = -1;
 				}
 			}
 			if (m_MouseisDrag && isMouse(0) && isMouseDown(0) == false)
 			{
-				if (m_SelectedObj != nullptr) 
+				if (m_SelectedKind != SelectedKind_None)
 				{
+					Transform* pTF = nullptr;
 					Vector2 mouseMove = GetMouseMove();
 					if (mouseMove != Vector2::Zero) 
 					{
-						Transform* pTF = m_SelectedObj->GetPTransform();
+						switch (m_SelectedKind)
+						{
+						case E_SelectedKind::SelectedKind_GameObject:
+							pTF = m_Objs[m_SelectedIdx].get()->GetPTransform();
+							break;
+						case E_SelectedKind::SelectedKind_Light:
+							int directionalLightCount = m_DirectionalLights.size();
+							int pointLightCount = m_PointLights.size();
+							int spotLightCount = m_SpotLights.size();
+							if (m_SelectedIdx < directionalLightCount)
+							{
+								pTF = m_DirectionalLights[m_SelectedIdx].get()->GetPTransform();
+								//directionalLight
+							}
+							else if (m_SelectedIdx < directionalLightCount + pointLightCount)
+							{
+								//pointLight
+								pTF = m_PointLights[m_SelectedIdx - directionalLightCount].get()->GetPTransform();
+							}
+							else
+							{
+								//spotLight
+								pTF = m_SpotLights[m_SelectedIdx - directionalLightCount - pointLightCount].get()->GetPTransform();
+							}
+							break;
+						}
 						Vector3 worldPos = pTF->GetPosition();
 						Vector4 worldV4 = Vector4(worldPos.x, worldPos.y, worldPos.z, 1);
 
@@ -171,7 +264,7 @@ void App::Update(const float deltaTime)
 					}
 				}
 			}
-			if (m_SelectedObj != nullptr)
+			if (m_SelectedKind != SelectedKind_None)
 			{
 				
 				if (isMouseUp(0))
@@ -208,8 +301,12 @@ void App::Render()
 	D3DUtil::UpdateCBuffer(m_Context, m_GlobalCBufferCPU, m_GlobalCBufferGPU);
 
 	m_Context->VSSetConstantBuffers(GLOBAL_CBUFFER_SLOT, 1, m_GlobalCBufferGPU.GetAddressOf());
+	m_Context->GSSetConstantBuffers(GLOBAL_CBUFFER_SLOT, 1, m_GlobalCBufferGPU.GetAddressOf());
 	m_Context->PSSetConstantBuffers(GLOBAL_CBUFFER_SLOT, 1, m_GlobalCBufferGPU.GetAddressOf());
 
+	Vector3 r0 = m_GlobalCBufferCPU.view.Right();
+	Vector3 r1 = m_GlobalCBufferCPU.view.Up();
+	Vector3 r2 = -m_GlobalCBufferCPU.view.Forward();
 	//Update LightCBuffer
 	int directionalLightCount = m_DirectionalLights.size();
 	int pointLightCount = m_PointLights.size();
@@ -250,7 +347,7 @@ void App::Render()
 	//IBLTexture
 
 	//스카이박스
-	m_Skybox.Render(m_Context);
+	m_Skybox->Render(m_Context);
 
 	//기본 오브젝트
 	int objCount = m_Objs.size();
@@ -266,13 +363,56 @@ void App::Render()
 	//Mouse Picking
 	if (EditMode)
 	{
-		//Mousepicking draw
+		//draw billboard
 		m_Context->ClearRenderTargetView(m_MousePickingRTV.Get(), clearColor);
-		m_Context->ClearDepthStencilView(m_MainDSV.Get(), D3D11_CLEAR_DEPTH, 1.f, 0);
+
+		vector<ID3D11RenderTargetView*> vRtv = { m_MainRTV.Get(), m_MousePickingRTV.Get() };
+		m_Context->OMSetRenderTargets(2, vRtv.data(), m_MainDSV.Get());
+
+		UINT r = 0, g = 0, b = 0;
+		vector<ID3D11ShaderResourceView*> arr_srv = { GetTexView(LightIconKey).Get() };
+		m_Context->PSSetShaderResources(0, 1, arr_srv.data());
+		BillboardPointImagePSO.RenderSetting(m_Context);
+		MousePickingCBuffer* cbufferCPU = static_cast<MousePickingCBuffer*>(BillboardPointImagePSO.m_MaterialCBufferCPU);
+		int idx = 0;
+		for (int i = 0; i < directionalLightCount; i++)
+		{
+			Util::IdxToUINT3Color(objCount + idx + 1, r, g, b);
+			cbufferCPU->idx = i;
+			cbufferCPU->color[0] = r;
+			cbufferCPU->color[1] = g;
+			cbufferCPU->color[2] = b;
+			BillboardPointImagePSO.UpdateMatCBuffer(m_Context);
+			m_DirectionalLights[i]->Render(m_Context);
+			idx++;
+		}
+		for (int i = 0; i < pointLightCount; i++)
+		{
+			Util::IdxToUINT3Color(objCount + idx + 1, r, g, b);
+			cbufferCPU->idx = i;
+			cbufferCPU->color[0] = r;
+			cbufferCPU->color[1] = g;
+			cbufferCPU->color[2] = b;
+			BillboardPointImagePSO.UpdateMatCBuffer(m_Context);
+			m_PointLights[i]->Render(m_Context);
+			idx++;
+		}
+		for (int i = 0; i < spotLightCount; i++)
+		{
+			Util::IdxToUINT3Color(objCount + idx + 1, r, g, b);
+			cbufferCPU->idx = i;
+			cbufferCPU->color[0] = r;
+			cbufferCPU->color[1] = g;
+			cbufferCPU->color[2] = b;
+			BillboardPointImagePSO.UpdateMatCBuffer(m_Context);
+			m_SpotLights[i]->Render(m_Context);
+			idx++;
+		}
+		
+		//Mousepicking draw
 		m_Context->OMSetRenderTargets(1, m_MousePickingRTV.GetAddressOf(), m_MainDSV.Get());
 		MousePickingPSO.RenderSetting(m_Context);
-		MousePickingCBuffer* cbufferCPU = static_cast<MousePickingCBuffer*>(MousePickingPSO.m_MaterialCBufferCPU);
-		UINT r = 0, g = 0, b = 0;
+		cbufferCPU = static_cast<MousePickingCBuffer*>(MousePickingPSO.m_MaterialCBufferCPU);
 		for (int i = 0; i < objCount; i++)
 		{
 			Util::IdxToUINT3Color(i + 1, r, g, b);
@@ -308,25 +448,29 @@ void App::Render()
 				uint8_t r = pixel[0];
 				uint8_t g = pixel[1];
 				uint8_t b = pixel[2];
-				m_MousePickingObjIdx = Util::UINT3ColorToIdx(r, g, b) - 1;
+				m_MouseCursorColorValue = Util::UINT3ColorToIdx(r, g, b) - 1;
+				if (m_MouseCursorColorValue > -1)
+				{
+					cout << "크다 "<< m_MouseCursorColorValue << endl;
+				}
 			}
 			else
 			{
-				m_MousePickingObjIdx = -1;
+				m_MouseCursorColorValue = -1;
 			}
 			m_Context->Unmap(m_MousePickingStagingTex.Get(), 0);
 		}
 	}
-
-	
 }
 
 
-void App::LoadTexture(const string& filename, const bool useSRGB, ComPtr<ID3D11Texture2D>& tex, ComPtr<ID3D11ShaderResourceView>& srv, const UINT mipLevel)
+void App::LoadTexture(const string& key, const string& filename, const bool useSRGB, const UINT mipLevel)
 {
+	ComPtr<ID3D11Texture2D> tex;
+	ComPtr<ID3D11ShaderResourceView> srv;
 	D3DUtil::CreateTexture(m_Device, m_Context, filename, useSRGB, tex, srv, mipLevel);
 
-	size_t nameKey = std::hash<string>()(filename);
+	size_t nameKey = std::hash<string>()(key);
 	m_TexViews[nameKey] = srv;
 }
 void App::LoadModel(const string& modelName, MeshData meshData)
@@ -342,17 +486,17 @@ GameObject* App::CreateObj(const string& name, const string& modelName, Graphics
 
 DirectionalLight* App::CreateDirectionalLight(Vector3& position, Vector3& euler, Vector3& strength)
 {
-	m_DirectionalLights.push_back(make_shared<DirectionalLight>(position, euler, strength));
+	m_DirectionalLights.push_back(make_shared<DirectionalLight>(m_Device, position, euler, strength));
 	return m_DirectionalLights.back().get();
 }
 PointLight* App::CreatePointLight(Vector3& position, Vector3& strength, float fallOffStart, float fallOffEnd)
 {
-	m_PointLights.push_back(make_shared<PointLight>(position, strength, fallOffStart, fallOffEnd));
+	m_PointLights.push_back(make_shared<PointLight>(m_Device, position, strength, fallOffStart, fallOffEnd));
 	return m_PointLights.back().get();
 }
 SpotLight* App::CreateSpotLight(Vector3& position, Vector3& euler, Vector3& strength, float fallOffStart, float fallOffEnd, float spotPower)
 {
-	m_SpotLights.push_back(make_shared<SpotLight>(position, euler, strength, fallOffStart, fallOffEnd, spotPower));
+	m_SpotLights.push_back(make_shared<SpotLight>(m_Device, position, euler, strength, fallOffStart, fallOffEnd, spotPower));
 	return m_SpotLights.back().get();
 }
 DirectionalLight* App::CreateDirectionalLight()
@@ -360,7 +504,7 @@ DirectionalLight* App::CreateDirectionalLight()
 	Vector3 pos = Vector3(0, 5, 0);
 	Vector3 euler = Vector3::Zero;
 	Vector3 strength = Vector3(1, 1, 1);
-	m_DirectionalLights.push_back(make_shared<DirectionalLight>(pos, euler, strength));
+	m_DirectionalLights.push_back(make_shared<DirectionalLight>(m_Device, pos, euler, strength));
 	return m_DirectionalLights.back().get();
 }
 PointLight* App::CreatePointLight()
@@ -369,7 +513,7 @@ PointLight* App::CreatePointLight()
 	Vector3 strength = Vector3(1, 1, 1);
 	float fallOffStart = 0.1;
 	float fallOffEnd = 1.0f;
-	m_PointLights.push_back(make_shared<PointLight>(pos, strength, fallOffStart, fallOffEnd));
+	m_PointLights.push_back(make_shared<PointLight>(m_Device, pos, strength, fallOffStart, fallOffEnd));
 	return m_PointLights.back().get();
 }
 SpotLight* App::CreateSpotLight()
@@ -380,7 +524,7 @@ SpotLight* App::CreateSpotLight()
 	float fallOffStart = 0.1;
 	float fallOffEnd = 1.0f;
 	float spotPower = 5;
-	m_SpotLights.push_back(make_shared<SpotLight>(pos, euler, strength, fallOffStart, fallOffEnd, spotPower));
+	m_SpotLights.push_back(make_shared<SpotLight>(m_Device, pos, euler, strength, fallOffStart, fallOffEnd, spotPower));
 	return m_SpotLights.back().get();
 }
 GameObject* App::GetObj(const string& name)
@@ -409,7 +553,7 @@ Model* App::GetModel(const string& name)
 	return nullptr;
 }
 
-ID3D11ShaderResourceView* App::GetTexView(const string& name)
+ComPtr<ID3D11ShaderResourceView> App::GetTexView(const string& name)
 {
 	UINT size = m_Objs.size();
 	size_t nameKey = std::hash<string>()(name);
