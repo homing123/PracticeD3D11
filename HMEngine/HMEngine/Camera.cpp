@@ -29,3 +29,9 @@ void Camera::ChangeScreenSize(const int width, const int height)
 	m_ScreenHeight = height;
 	m_AspectRatio = (float)width / height;
 }
+
+void Camera::DrawGui(ComPtr<ID3D11DeviceContext>& context)
+{
+	ImGui::Text("Camera");
+	m_Transform->DrawGui();
+}

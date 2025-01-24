@@ -30,6 +30,7 @@
     <ClCompile Include="ImGuiUtil.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MaterialCBuffer.cpp" />
     <ClCompile Include="MeshFactory.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelLoader.cpp" />
@@ -49,6 +50,7 @@
     <ClInclude Include="ImGuiUtil.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="Material.h" />
+    <ClInclude Include="MaterialCBuffer.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshData.h" />
     <ClInclude Include="MeshFactory.h" />

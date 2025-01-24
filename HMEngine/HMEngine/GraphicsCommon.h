@@ -36,10 +36,12 @@ namespace Graphics
 	extern ComPtr<ID3D11PixelShader> MousePickingPS;
 	extern ComPtr<ID3D11PixelShader> BillboardPointImagePS;
 
-	extern BlinnPhongCBuffer BlinnPhongMatCBuffer_0;
-	extern BlinnPhongCBuffer BlinnPhongMatCBuffer_1;
-	extern SkyboxCBuffer SkyboxMatCBuffer;
-	extern MousePickingCBuffer MousePickingMatCBuffer;
+	extern Material BlinnPhongMat_0;
+	extern Material BlinnPhongMat_1;
+	extern Material IBLMat;
+	extern Material SkyboxMat;
+	extern Material MousePickingMat;
+	extern Material BillboardPointImageMat;
 
 	extern GraphicsPSO BlinnPhongPSO_0;
 	extern GraphicsPSO BlinnPhongPSO_1;
@@ -55,7 +57,7 @@ namespace Graphics
 	void InitDepthStencilState(ComPtr<ID3D11Device>& device);
 	void InitBlendState(ComPtr<ID3D11Device>& device);
 	void InitShaders(ComPtr<ID3D11Device>& device);
-	void InitMaterial();
+	void InitMaterial(ComPtr<ID3D11Device>& device);
 	void InitPSO(ComPtr<ID3D11Device>& device);
 
 	void SetSolid(const bool isSolid);

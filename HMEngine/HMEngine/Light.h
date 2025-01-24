@@ -1,19 +1,23 @@
 #pragma once
 
 #include "Transform.h"
+#include "ImGuiUtil.h"
 
 class Light
 {
 public:
-	Light() = default;
 	Light(ComPtr<ID3D11Device>& device, Vector3& position, Vector3& strength, const E_LightType type);
-	Vector3 m_Strength;
+	static bool CompareLightType(Light* a, Light* b);
 	const E_LightType GetLightType()const;
-	Transform* GetPTransform()const;
-	virtual void SetLightCBuffer(LightInfo& lightInfo);
 	void Render(ComPtr<ID3D11DeviceContext>& context);
 
-	static bool CompareLightType(Light* a, Light* b);
+	Transform* GetPTransform()const;
+
+	virtual void SetLightCBuffer(LightInfo& lightInfo);
+	virtual void DrawGui(ComPtr<ID3D11DeviceContext>& context);
+public:
+	Vector3 m_Strength;
+	
 protected:
 	shared_ptr<Transform> m_Transform;
 	ComPtr<ID3D11Buffer> m_VertexBuffer;
@@ -22,6 +26,8 @@ protected:
 
 	const static UINT stride;
 	const static UINT offset;
+private:
+	Light() = default;
 };
 
 class DirectionalLight : public Light
@@ -30,6 +36,7 @@ public:
 	DirectionalLight(ComPtr<ID3D11Device>& device, Vector3 position, Vector3 euler, Vector3 strength);
 
 	void SetLightCBuffer(LightInfo& lightInfo);
+	void DrawGui(ComPtr<ID3D11DeviceContext>& context);
 private:
 	DirectionalLight() = default;
 };
@@ -38,9 +45,11 @@ class PointLight : public Light
 public:
 	PointLight(ComPtr<ID3D11Device>& device, Vector3 position, Vector3 strength, float fallOffStart, float fallOffEnd);
 
+public:
 	float m_FallOffStart;
 	float m_FallOffEnd;
 	void SetLightCBuffer(LightInfo& lightInfo);
+	void DrawGui(ComPtr<ID3D11DeviceContext>& context);
 private:
 	PointLight() = default;
 
@@ -50,10 +59,12 @@ class SpotLight :public Light
 public:
 	SpotLight(ComPtr<ID3D11Device>& device, Vector3 position, Vector3 euler, Vector3 strength, float fallOffStart, float fallOffEnd, float spotPower);
 
+public:
 	float m_FallOffStart;
 	float m_FallOffEnd;
 	float m_SpotPower;
 	void SetLightCBuffer(LightInfo& lightInfo);
+	void DrawGui(ComPtr<ID3D11DeviceContext>& context);
 private:
 	SpotLight() = default;
 

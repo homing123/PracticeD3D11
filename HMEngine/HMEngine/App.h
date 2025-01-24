@@ -51,12 +51,6 @@ public:
 	GameObject* CreateObj(const string& name, const string& modelName, GraphicsPSO* pPSO);
 	GameObject* GetObj(const string& name);
 	void CreateLight(Light* pLight);
-	DirectionalLight* CreateDirectionalLight(Vector3& position, Vector3& euler, Vector3& strength);
-	PointLight* CreatePointLight(Vector3& position, Vector3& strength, float fallOffStart, float fallOffEnd);
-	SpotLight* CreateSpotLight(Vector3& position, Vector3& euler, Vector3& strength, float fallOffStart, float fallOffEnd, float spotPower);
-	DirectionalLight* CreateDirectionalLight();
-	PointLight* CreatePointLight();
-	SpotLight* CreateSpotLight();
 
 	Model* GetModel(const string& name);
 	ComPtr<ID3D11ShaderResourceView> GetTexView(const string& name);
@@ -106,7 +100,7 @@ private:
 	vector<shared_ptr<GameObject>> m_Objs;
 	vector<shared_ptr<Light>> m_Lights;
 
-	Camera m_Cam;
+	Camera* m_Cam;
 	GameObject* m_Skybox;
 	ComPtr<ID3D11ShaderResourceView> m_EnvIBLSRV;
 	ComPtr<ID3D11ShaderResourceView> m_DiffuseIBLSRV;

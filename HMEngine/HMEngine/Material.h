@@ -2,6 +2,9 @@
 
 #include <vector>
 #include "D3DUtil.h"
+#include "ImGuiUtil.h"
+#include "MaterialCBuffer.h"
+#include <array>
 
 using namespace std;
 using Microsoft::WRL::ComPtr;
@@ -17,45 +20,80 @@ enum E_MatKind
 	Skybox,
 	MousePicking,
 };
-struct MaterialCBuffer
-{
 
-};
-__declspec(align(256)) struct PBRCBuffer : MaterialCBuffer
+class Material
 {
-	int useAlbedo = 0;
-	int useNormal = 0;
-	int useAO = 0;
-	int useMetalic = 0;
-	int useRoughness = 0;
-	int useEmissive = 0;
-	Vector2 dummy;
-};
+public:
+	E_MatKind m_MatKind;
+	IMaterialCBuffer* m_MatCBufferCPU = nullptr;
+	ComPtr<ID3D11Buffer> m_MatCBufferGPU;
 
-__declspec(align(256)) struct BlinnPhongCBuffer : MaterialCBuffer
-{
-	Vector3 ambient;
-	float shininess;
-	Vector3 diffuse;
-	float dummy;
-	Vector3 specular;
-	float dummy2;
-};
-__declspec(align(256)) struct IBLCBuffer : MaterialCBuffer
-{
-	Vector3 diffuse;
-	float dummy;
-	Vector3 specular;
-	float dummy2;
-};
+	void CreateMaterialCBufferCPU(ComPtr<ID3D11Device>& device, E_MatKind matKind)
+	{
+		m_MatKind = matKind;
+		switch (matKind)
+		{
+		case E_MatKind::BlinnPhong:
+			m_MatCBufferCPU = new BlinnPhongCBuffer();
+			break;
+		case E_MatKind::IBL:
+			m_MatCBufferCPU = new IBLCBuffer();
+			break;
+		case E_MatKind::MousePicking:
+			m_MatCBufferCPU = new MousePickingCBuffer();
+			break;
+		case E_MatKind::Skybox:
+			m_MatCBufferCPU = new SkyboxCBuffer();
+			break;
+		}
+		m_MatCBufferCPU->CreateCBuffer(device, m_MatCBufferGPU);
+	}
+	void SetVector4(const string& name, const Vector4& vt4)
+	{
+		isChanged = true;
+		m_MatCBufferCPU->SetVector4(name, vt4);
+	}
+	void SetVector3(const string& name, const Vector3& vt3)
+	{
+		isChanged = true;
+		m_MatCBufferCPU->SetVector3(name, vt3);
+	}
+	void SetVector2(const string& name, const Vector2& vt2)
+	{
+		isChanged = true;
+		m_MatCBufferCPU->SetVector2(name, vt2);
+	}
+	void Setfloat(const string& name, const float f)
+	{
+		isChanged = true;
+		m_MatCBufferCPU->Setfloat(name, f);
+	}
+	void SetUINT(const string& name, const UINT uint)
+	{
+		isChanged = true;
+		m_MatCBufferCPU->SetUINT(name, uint);
+	}
+	void SetUINT4(const string& name, const array<UINT,4> uint4)
+	{
+		isChanged = true;
+		m_MatCBufferCPU->SetUINT4(name, uint4);
+	}
 
-__declspec(align(256)) struct MousePickingCBuffer : MaterialCBuffer
-{
-	UINT color[3];
-	int idx;
-};
+	void PSSetCBuffer(ComPtr<ID3D11DeviceContext>& context)
+	{
+		if (isChanged)
+		{
+			m_MatCBufferCPU->UpdateCBuffer(context, m_MatCBufferGPU);
+		}
+		context->PSSetConstantBuffers(0, 1, m_MatCBufferGPU.GetAddressOf());
+	}
 
-__declspec(align(256)) struct SkyboxCBuffer : MaterialCBuffer
-{
+	void DrawGui(ComPtr<ID3D11DeviceContext>& context)
+	{
+		m_MatCBufferCPU->DrawGui(context, m_MatCBufferGPU);
+	}
+protected:
+private:
+	bool isChanged = false;
 
 };

@@ -81,3 +81,16 @@ void Transform::SetTransformCBuffer(ComPtr< ID3D11DeviceContext>& context)
 	context->VSSetConstantBuffers(TRANSFORM_CBUFFER_SLOT, 1, m_TransformCBufferGPU.GetAddressOf());
 }
 
+
+void Transform::DrawGui()
+{
+	ImGui::Text("Transform");
+
+	Vector3 rot = m_Rotation.ToEuler();
+
+	ImGui::DragFloat3("Position", &m_Position.x, 0.05f);
+	ImGui::DragFloat3("Rotation", &rot.x, 0.01f);
+	ImGui::DragFloat3("Scale", &m_Scale.x, 0.02f);
+
+	SetEuler(rot);
+}

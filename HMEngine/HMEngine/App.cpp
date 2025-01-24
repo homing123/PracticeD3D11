@@ -51,8 +51,9 @@ void App::Start()
 	m_Context->PSSetShaderResources(IBL_TEX_SLOT, IBL_TEX_COUNT, vIBLSRV.data());
 
 	//카메라 정보 설정
-	m_Cam.ChangeScreenSize(m_ScreenWidth, m_ScreenHeight);
-	m_Cam.GetPTransform()->SetPosition(Vector3(0, 0, -5));
+	m_Cam = new Camera(m_Device);
+	m_Cam->ChangeScreenSize(m_ScreenWidth, m_ScreenHeight);
+	m_Cam->GetPTransform()->SetPosition(Vector3(0, 0, -5));
 	//m_Cam.GetPTransform()->SetEuler(Vector3(0, 90 * ToRadian, 0));
 }
 void App::UpdateGUI()
@@ -61,8 +62,7 @@ void App::UpdateGUI()
 	ImGui::Checkbox("MoveMode", &m_MoveMode);
 	if (m_MoveMode)
 	{
-		ImGui::Text("Camera");
-		ImGuiUtil::DrawTransform(m_Cam.GetPTransform());
+		m_Cam->DrawGui(m_Context);
 	}
 	if (ImGui::TreeNode("IBL"))
 	{
@@ -74,38 +74,11 @@ void App::UpdateGUI()
 	{
 	case E_SelectedKind::SelectedKind_GameObject:
 		{
-			GameObject* selectedObj = m_Objs[m_SelectedIdx].get();
-			if (ImGui::TreeNode(selectedObj->m_Name.c_str()))
-			{
-				Transform* pTF = selectedObj->GetPTransform();
-				ImGuiUtil::DrawTransform(selectedObj->GetPTransform());
-				GraphicsPSO* pPSO = selectedObj->m_PSO;
-				ImGuiUtil::DrawMaterial(m_Context, pPSO->m_MaterialCBufferCPU, pPSO->m_MaterialCBufferGPU, pPSO->m_MatKind);
-				ImGui::TreePop();
-			}
+			m_Objs[m_SelectedIdx].get()->DrawGui(m_Context);
 		}
 		break;
 	case E_SelectedKind::SelectedKind_Light:
-		Light* selectedLight = m_Lights[m_SelectedIdx].get();
-		if (ImGui::TreeNode("Light"))
-		{
-
-			switch (selectedLight->GetLightType())
-			{
-			case E_LightType::Directional:
-				ImGui::Text("Directional Light");
-				break;
-			case E_LightType::Point:
-				ImGui::Text("Point Light");
-				break;
-			case E_LightType::Spot:
-				ImGui::Text("Spot Light");
-				break;
-			}
-			ImGuiUtil::DrawTransform(selectedLight->GetPTransform());
-			ImGui::TreePop();
-
-		}
+		m_Lights[m_SelectedIdx].get()->DrawGui(m_Context);
 		break;
 	}
 	
@@ -128,7 +101,7 @@ void App::Update(const float deltaTime)
 	if (m_MoveMode)
 	{
 		float camMoveSpeed = 3.0f;
-		Transform* pCamTF = m_Cam.GetPTransform();
+		Transform* pCamTF = m_Cam->GetPTransform();
 		Vector3 camPos = pCamTF->GetPosition();
 		if (isKey(0x57)) //W
 		{
@@ -217,8 +190,8 @@ void App::Update(const float deltaTime)
 						Vector3 worldPos = pTF->GetPosition();
 						Vector4 worldV4 = Vector4(worldPos.x, worldPos.y, worldPos.z, 1);
 
-						Matrix viewMat = m_Cam.GetViewMat();
-						Matrix projMat = m_Cam.GetProjectionMat();
+						Matrix viewMat = m_Cam->GetViewMat();
+						Matrix projMat = m_Cam->GetProjectionMat();
 						Matrix vp = viewMat * projMat;
 						Matrix inv_vp = vp.Invert();
 
@@ -256,12 +229,12 @@ void App::Update(const float deltaTime)
 void App::Render()
 {
 	//Update GlobalCBuffer
-	Matrix view = m_Cam.GetViewMat();
-	Matrix proj = m_Cam.GetProjectionMat();
+	Matrix view = m_Cam->GetViewMat();
+	Matrix proj = m_Cam->GetProjectionMat();
 	Matrix invProj = proj.Invert();
 	Matrix viewProj = view * proj; //row 행렬
 	Matrix invViewProj = viewProj.Invert();
-	Vector3 eyeWorld = m_Cam.GetPTransform()->GetPosition();
+	Vector3 eyeWorld = m_Cam->GetPTransform()->GetPosition();
 	m_GlobalCBufferCPU.view = view.Transpose();
 	m_GlobalCBufferCPU.proj = proj.Transpose();
 	m_GlobalCBufferCPU.invProj = invProj.Transpose();
@@ -304,14 +277,14 @@ void App::Render()
 	//IBLTexture
 	
 	//SkyBox
-	m_Skybox->Render(m_Context);
+	//m_Skybox->Render(m_Context);
 
 	//GameObjects
-	int objCount = m_Objs.size();
+	UINT objCount = m_Objs.size();
 	for (int i = 0; i < objCount; i++)
 	{
 		GameObject* pGO = m_Objs[i].get();
-		pGO->Render(m_Context);
+		//pGO->Render(m_Context);
 	}
 
 	//post effect
@@ -327,33 +300,29 @@ void App::Render()
 		vector<ID3D11ShaderResourceView*> arr_srv = { GetTexView(LightIconKey).Get() };
 		m_Context->PSSetShaderResources(0, 1, arr_srv.data());
 		BillboardPointImagePSO.RenderSetting(m_Context);
-		MousePickingCBuffer* cbufferCPU = static_cast<MousePickingCBuffer*>(BillboardPointImagePSO.m_MaterialCBufferCPU);
+		Material* pMat = BillboardPointImagePSO.m_Material;
 
+		const string att_name_idx = "idx";
 		for (int i = 0; i < lightCount; i++)
 		{
-			Util::IdxToUINT3Color(objCount + i + 1, r, g, b);
-			cbufferCPU->idx = objCount + i;
-			cbufferCPU->color[0] = r;
-			cbufferCPU->color[1] = g;
-			cbufferCPU->color[2] = b;
-			BillboardPointImagePSO.UpdateMatCBuffer(m_Context);
+			UINT idx = objCount + i + 1;
+			Util::IdxToUINT3Color(idx, r, g, b);
+			pMat->SetUINT4(att_name_idx, { r,g,b, idx });
+			pMat->PSSetCBuffer(m_Context);
 			m_Lights[i].get()->Render(m_Context);
 		}
 		
 		//Mousepicking draw
 		m_Context->OMSetRenderTargets(1, m_MousePickingRTV.GetAddressOf(), m_MainDSV.Get());
 		MousePickingPSO.RenderSetting(m_Context);
-		cbufferCPU = static_cast<MousePickingCBuffer*>(MousePickingPSO.m_MaterialCBufferCPU);
+		pMat = MousePickingPSO.m_Material;
 		for (int i = 0; i < objCount; i++)
 		{
-			Util::IdxToUINT3Color(i + 1, r, g, b);
-			cbufferCPU->idx = i;
-			cbufferCPU->color[0] = r;
-			cbufferCPU->color[1] = g;
-			cbufferCPU->color[2] = b;
-			MousePickingPSO.UpdateMatCBuffer(m_Context);
-			GameObject* pGO = m_Objs[i].get();
-			pGO->RenderUseCustomPSO(m_Context);
+			UINT idx = i + 1;
+			Util::IdxToUINT3Color(idx, r, g, b);
+			pMat->SetUINT4(att_name_idx, { r,g,b,idx });
+			pMat->PSSetCBuffer(m_Context);
+			m_Objs[i].get()->RenderUseCustomPSO(m_Context);
 		}
 		m_Context->OMSetRenderTargets(1, m_MainRTV.GetAddressOf(), m_MainDSV.Get());
 		m_Context->CopyResource(m_MousePickingStagingTex.Get(), m_MousePickingTex.Get());
@@ -380,10 +349,6 @@ void App::Render()
 				uint8_t g = pixel[1];
 				uint8_t b = pixel[2];
 				m_MouseCursorColorValue = Util::UINT3ColorToIdx(r, g, b) - 1;
-				if (m_MouseCursorColorValue > -1)
-				{
-					cout << "크다 "<< m_MouseCursorColorValue << endl;
-				}
 			}
 			else
 			{
@@ -603,7 +568,7 @@ LRESULT CALLBACK App::MsgProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam
 			int height = (lParam >> 16) & 0x0000FFFF;
 			m_ScreenWidth = width;
 			m_ScreenHeight = height;
-			m_Cam.ChangeScreenSize(m_ScreenWidth, m_ScreenHeight);
+			m_Cam->ChangeScreenSize(m_ScreenWidth, m_ScreenHeight);
 
 			m_MainRTV.Reset();
 			m_MainSRV.Reset();

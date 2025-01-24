@@ -36,13 +36,12 @@ namespace Graphics
 	ComPtr<ID3D11PixelShader> MousePickingPS;
 	ComPtr<ID3D11PixelShader> BillboardPointImagePS;
 
-	BlinnPhongCBuffer BlinnPhongMatCBuffer_0;
-	BlinnPhongCBuffer BlinnPhongMatCBuffer_1;
-	IBLCBuffer IBLMatCBuffer;
-	SkyboxCBuffer SkyboxMatCBuffer;
-	MousePickingCBuffer MousePickingMatCBuffer;
-	MousePickingCBuffer BillboardPointImageMatCBuffer;
-
+	Material BlinnPhongMat_0;
+	Material BlinnPhongMat_1;
+	Material IBLMat;
+	Material SkyboxMat;
+	Material MousePickingMat;
+	Material BillboardPointImageMat;
 
 	GraphicsPSO BlinnPhongPSO_0;
 	GraphicsPSO BlinnPhongPSO_1;
@@ -61,7 +60,7 @@ void Graphics::InitGraphics(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceCon
 	InitDepthStencilState(device);
 	InitBlendState(device);
 	InitShaders(device);
-	InitMaterial();
+	InitMaterial(device);
 	InitPSO(device);
 }
 void Graphics::InitSampleState(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context)
@@ -173,18 +172,14 @@ void Graphics::InitShaders(ComPtr<ID3D11Device>& device)
 	D3DUtil::CreatePixelShader(device, L"PSMousePicking.hlsl", MousePickingPS);
 	D3DUtil::CreatePixelShader(device, L"PSBillboardPointImage.hlsl", BillboardPointImagePS);
 }
-void Graphics::InitMaterial()
+void Graphics::InitMaterial(ComPtr<ID3D11Device>& device)
 {
-	BlinnPhongMatCBuffer_0.ambient = Vector3(1, 1, 1);
-	BlinnPhongMatCBuffer_0.shininess = 0;
-	BlinnPhongMatCBuffer_0.diffuse = Vector3(0, 0, 0);
-	BlinnPhongMatCBuffer_0.specular = Vector3(0, 0, 0);
-
-	IBLMatCBuffer.diffuse = Vector3(1, 1, 1);
-	IBLMatCBuffer.specular = Vector3(1, 1, 1);
-
-
-
+	BlinnPhongMat_0.CreateMaterialCBufferCPU(device, BlinnPhong);
+	BlinnPhongMat_1.CreateMaterialCBufferCPU(device, BlinnPhong);
+	IBLMat.CreateMaterialCBufferCPU(device, IBL);
+	SkyboxMat.CreateMaterialCBufferCPU(device, Skybox);
+	MousePickingMat.CreateMaterialCBufferCPU(device, MousePicking);
+	BillboardPointImageMat.CreateMaterialCBufferCPU(device, MousePicking);
 }
 void Graphics::InitPSO(ComPtr<ID3D11Device>& device)
 {
@@ -194,7 +189,7 @@ void Graphics::InitPSO(ComPtr<ID3D11Device>& device)
 	BlinnPhongPSO_0.m_RasterState = SolidCWRS;
 	BlinnPhongPSO_0.m_DepthStensilState = BasicDSS;
 	BlinnPhongPSO_0.m_BlendState = BasicBS;
-	BlinnPhongPSO_0.SetMatKindAndCreateCBuffer(device, E_MatKind::BlinnPhong, &BlinnPhongMatCBuffer_0);
+	BlinnPhongPSO_0.m_Material = &BlinnPhongMat_0;
 	
 	BlinnPhongPSO_1.m_VS = BasicMeshVS;
 	BlinnPhongPSO_1.m_PS = BlinnPhongPS;
@@ -202,7 +197,7 @@ void Graphics::InitPSO(ComPtr<ID3D11Device>& device)
 	BlinnPhongPSO_1.m_RasterState = SolidCWRS;
 	BlinnPhongPSO_1.m_DepthStensilState = BasicDSS;
 	BlinnPhongPSO_1.m_BlendState = BasicBS;
-	BlinnPhongPSO_1.SetMatKindAndCreateCBuffer(device, E_MatKind::BlinnPhong, &BlinnPhongMatCBuffer_1);
+	BlinnPhongPSO_1.m_Material = &BlinnPhongMat_1;
 
 	IBLPSO.m_VS = BasicMeshVS;
 	IBLPSO.m_PS = IBLPS;
@@ -210,7 +205,7 @@ void Graphics::InitPSO(ComPtr<ID3D11Device>& device)
 	IBLPSO.m_RasterState = SolidCWRS;
 	IBLPSO.m_DepthStensilState = BasicDSS;
 	IBLPSO.m_BlendState = BasicBS;
-	IBLPSO.SetMatKindAndCreateCBuffer(device, E_MatKind::IBL, &IBLMatCBuffer);
+	IBLPSO.m_Material = &IBLMat;
 
 	SkyboxPSO.m_VS = SkyboxVS;
 	SkyboxPSO.m_PS = SkyboxPS;
@@ -218,7 +213,7 @@ void Graphics::InitPSO(ComPtr<ID3D11Device>& device)
 	SkyboxPSO.m_RasterState = SolidCCWRS;
 	SkyboxPSO.m_DepthStensilState = SkyboxDSS;
 	SkyboxPSO.m_BlendState = BasicBS;
-	SkyboxPSO.SetMatKindAndCreateCBuffer(device, E_MatKind::Skybox, &SkyboxMatCBuffer);
+	SkyboxPSO.m_Material = &SkyboxMat;
 
 	MousePickingPSO.m_VS = BasicMeshVS;
 	MousePickingPSO.m_PS = MousePickingPS;
@@ -226,7 +221,7 @@ void Graphics::InitPSO(ComPtr<ID3D11Device>& device)
 	MousePickingPSO.m_RasterState = SolidCWRS;
 	MousePickingPSO.m_DepthStensilState = MousePickingDSS;
 	MousePickingPSO.m_BlendState = MousePickingBS;
-	MousePickingPSO.SetMatKindAndCreateCBuffer(device, E_MatKind::MousePicking, &MousePickingMatCBuffer);
+	MousePickingPSO.m_Material = &MousePickingMat;
 
 	BillboardPointImagePSO.m_VS = BillboardPointImageVS;
 	BillboardPointImagePSO.m_GS = BillboardPointImageGS;
@@ -235,7 +230,8 @@ void Graphics::InitPSO(ComPtr<ID3D11Device>& device)
 	BillboardPointImagePSO.m_RasterState = SolidCWRS;
 	BillboardPointImagePSO.m_DepthStensilState = BasicDSS;
 	BillboardPointImagePSO.m_BlendState = BasicBS;
-	BillboardPointImagePSO.SetMatKindAndCreateCBuffer(device, E_MatKind::MousePicking, &BillboardPointImageMatCBuffer);
 	BillboardPointImagePSO.m_PrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_POINTLIST;
+	BillboardPointImagePSO.m_Material = &BillboardPointImageMat;
+
 
 }

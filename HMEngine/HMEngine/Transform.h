@@ -3,6 +3,7 @@
 #include <directxtk/SimpleMath.h>
 #include "ConstantBuffer.h"
 #include "D3DUtil.h"
+#include "ImGuiUtil.h"
 
 using DirectX::SimpleMath::Vector3;
 using DirectX::SimpleMath::Matrix;
@@ -13,7 +14,7 @@ class Transform
 {
 
 public:
-	Transform() {};
+
 	Transform(ComPtr<ID3D11Device>& device);
 	const Vector3 GetPosition() const;
 	const Quaternion GetRotation() const;
@@ -35,7 +36,10 @@ public:
 	void SetScale(const Vector3& _scale);
 
 	void SetTransformCBuffer(ComPtr<ID3D11DeviceContext>& context);
+	void DrawGui();
 
+private:
+	Transform() = default;
 
 private:
 	Vector3 m_Position;

@@ -27,14 +27,9 @@ public:
 
 	D3D11_PRIMITIVE_TOPOLOGY m_PrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
-	ComPtr<ID3D11Buffer> m_MaterialCBufferGPU;
-	MaterialCBuffer* m_MaterialCBufferCPU;
-	E_MatKind m_MatKind;
+	Material* m_Material;
 
 public:
-	void SetMatKindAndCreateCBuffer(ComPtr<ID3D11Device>& device, E_MatKind matKind, MaterialCBuffer* pMatCBuffer);
 	void RenderSetting(ComPtr<ID3D11DeviceContext>& context);
-	void UpdateMatCBuffer(ComPtr<ID3D11DeviceContext>& context);
 
-	//void operator=(const GraphicsPSO& pso);
 };
