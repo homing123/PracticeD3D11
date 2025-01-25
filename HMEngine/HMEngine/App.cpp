@@ -257,8 +257,9 @@ void App::Render()
 			vLightSort.push_back(m_Lights[i].get());
 		}
 	}
+	int activeLightCount = vLightSort.size();
 	sort(vLightSort.begin(), vLightSort.end(), Light::CompareLightType);
-	int loopCount = lightCount > MAX_LIGHTS ? MAX_LIGHTS : lightCount;
+	int loopCount = activeLightCount > MAX_LIGHTS ? MAX_LIGHTS : activeLightCount;
 	for (int i = 0; i < loopCount; i++)
 	{
 		vLightSort[i]->SetLightCBuffer(m_LightCBufferCPU.lights[i]);
