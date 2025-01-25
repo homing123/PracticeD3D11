@@ -36,12 +36,12 @@ namespace Graphics
 	ComPtr<ID3D11PixelShader> MousePickingPS;
 	ComPtr<ID3D11PixelShader> BillboardPointImagePS;
 
-	Material BlinnPhongMat_0;
-	Material BlinnPhongMat_1;
-	Material IBLMat;
-	Material SkyboxMat;
-	Material MousePickingMat;
-	Material BillboardPointImageMat;
+	BlinnPhongMaterial BlinnPhongMat_0;
+	BlinnPhongMaterial BlinnPhongMat_1;
+	IBLMaterial IBLMat;
+	SkyboxMaterial SkyboxMat;
+	MousePickingMaterial MousePickingMat;
+	BillboardPointImageMaterial BillboardPointImageMat;
 
 	GraphicsPSO BlinnPhongPSO_0;
 	GraphicsPSO BlinnPhongPSO_1;
@@ -174,12 +174,12 @@ void Graphics::InitShaders(ComPtr<ID3D11Device>& device)
 }
 void Graphics::InitMaterial(ComPtr<ID3D11Device>& device)
 {
-	BlinnPhongMat_0.CreateMaterialCBufferCPU(device, BlinnPhong);
-	BlinnPhongMat_1.CreateMaterialCBufferCPU(device, BlinnPhong);
-	IBLMat.CreateMaterialCBufferCPU(device, IBL);
-	SkyboxMat.CreateMaterialCBufferCPU(device, Skybox);
-	MousePickingMat.CreateMaterialCBufferCPU(device, MousePicking);
-	BillboardPointImageMat.CreateMaterialCBufferCPU(device, MousePicking);
+	BlinnPhongMat_0.CreateCBuffer(device);
+	BlinnPhongMat_1.CreateCBuffer(device);
+	IBLMat.CreateCBuffer(device);
+	SkyboxMat.CreateCBuffer(device);
+	MousePickingMat.CreateCBuffer(device);
+	BillboardPointImageMat.CreateCBuffer(device);
 }
 void Graphics::InitPSO(ComPtr<ID3D11Device>& device)
 {

@@ -3,7 +3,6 @@
 #include <vector>
 #include "D3DUtil.h"
 #include "ImGuiUtil.h"
-#include "MaterialCBuffer.h"
 #include <array>
 
 using namespace std;
@@ -24,76 +23,29 @@ enum E_MatKind
 class Material
 {
 public:
-	E_MatKind m_MatKind;
-	IMaterialCBuffer* m_MatCBufferCPU = nullptr;
-	ComPtr<ID3D11Buffer> m_MatCBufferGPU;
-
-	void CreateMaterialCBufferCPU(ComPtr<ID3D11Device>& device, E_MatKind matKind)
-	{
-		m_MatKind = matKind;
-		switch (matKind)
-		{
-		case E_MatKind::BlinnPhong:
-			m_MatCBufferCPU = new BlinnPhongCBuffer();
-			break;
-		case E_MatKind::IBL:
-			m_MatCBufferCPU = new IBLCBuffer();
-			break;
-		case E_MatKind::MousePicking:
-			m_MatCBufferCPU = new MousePickingCBuffer();
-			break;
-		case E_MatKind::Skybox:
-			m_MatCBufferCPU = new SkyboxCBuffer();
-			break;
-		}
-		m_MatCBufferCPU->CreateCBuffer(device, m_MatCBufferGPU);
-	}
-	void SetVector4(const string& name, const Vector4& vt4)
-	{
-		isChanged = true;
-		m_MatCBufferCPU->SetVector4(name, vt4);
-	}
-	void SetVector3(const string& name, const Vector3& vt3)
-	{
-		isChanged = true;
-		m_MatCBufferCPU->SetVector3(name, vt3);
-	}
-	void SetVector2(const string& name, const Vector2& vt2)
-	{
-		isChanged = true;
-		m_MatCBufferCPU->SetVector2(name, vt2);
-	}
-	void Setfloat(const string& name, const float f)
-	{
-		isChanged = true;
-		m_MatCBufferCPU->Setfloat(name, f);
-	}
-	void SetUINT(const string& name, const UINT uint)
-	{
-		isChanged = true;
-		m_MatCBufferCPU->SetUINT(name, uint);
-	}
-	void SetUINT4(const string& name, const array<UINT,4> uint4)
-	{
-		isChanged = true;
-		m_MatCBufferCPU->SetUINT4(name, uint4);
-	}
+	virtual void CreateCBuffer(ComPtr<ID3D11Device>& device) = 0;
+	virtual void SetVector4(const string& name, const Vector4& vt4) = 0;
+	virtual void SetVector3(const string& name, const Vector3& vt3) = 0;
+	virtual void SetVector2(const string& name, const Vector2& vt2) = 0;
+	virtual void Setfloat(const string& name, const float f) = 0;
+	virtual void SetUINT(const string& name, const UINT uint) = 0;
+	virtual void SetUINT4(const string& name, const array<UINT,4>& uint4) = 0;
+	virtual void DrawGui(ComPtr<ID3D11DeviceContext>& context) = 0;
+	virtual void UpdateCBuffer(ComPtr<ID3D11DeviceContext>& context) = 0;
 
 	void PSSetCBuffer(ComPtr<ID3D11DeviceContext>& context)
 	{
 		if (isChanged)
 		{
-			m_MatCBufferCPU->UpdateCBuffer(context, m_MatCBufferGPU);
+			UpdateCBuffer(context);
 		}
 		context->PSSetConstantBuffers(0, 1, m_MatCBufferGPU.GetAddressOf());
 	}
-
-	void DrawGui(ComPtr<ID3D11DeviceContext>& context)
-	{
-		m_MatCBufferCPU->DrawGui(context, m_MatCBufferGPU);
-	}
 protected:
-private:
 	bool isChanged = false;
+	E_MatKind m_MatKind;
+	ComPtr<ID3D11Buffer> m_MatCBufferGPU;
+
+private:
 
 };

@@ -76,8 +76,8 @@ private:
 
 	UINT numQualityLevels = 0;
 	HWND m_HWND;
-	int m_ScreenWidth = 800;
-	int m_ScreenHeight = 600;
+	int m_ScreenWidth = 1200;
+	int m_ScreenHeight = 800;
 
 	ComPtr<ID3D11Device> m_Device;
 	ComPtr<ID3D11DeviceContext> m_Context;

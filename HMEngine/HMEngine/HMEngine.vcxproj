@@ -30,7 +30,7 @@
     <ClCompile Include="ImGuiUtil.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="MaterialCBuffer.cpp" />
+    <ClCompile Include="MaterialKey.cpp" />
     <ClCompile Include="MeshFactory.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelLoader.cpp" />
@@ -39,6 +39,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
+    <ClInclude Include="BillboardPointImageMaterial.h" />
+    <ClInclude Include="BlinnPhongMaterial.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="CubeMapping.h" />
@@ -46,18 +48,20 @@
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GraphicsCommon.h" />
     <ClInclude Include="GraphicsPSO.h" />
+    <ClInclude Include="IBLMaterial.h" />
     <ClInclude Include="ImageFilter.h" />
     <ClInclude Include="ImGuiUtil.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="Material.h" />
-    <ClInclude Include="MaterialCBuffer.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshData.h" />
     <ClInclude Include="MeshFactory.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelLoader.h" />
+    <ClInclude Include="MousePickingMaterial.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="resource1.h" />
+    <ClInclude Include="SkyboxMaterial.h" />
     <ClInclude Include="Transform.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="Vertex.h" />

@@ -70,18 +70,20 @@ public:
 			cout << "UpdateCBuffer map failed" << endl;
 		}
 		// 주소 출력
-		cout << "Source address: " << &cBufferData << endl;
-		cout << "Destination address: " << ms.pData << endl;
+		/*cout << "Source address: " << &cBufferData << endl;
+		cout << "Destination address: " << ms.pData << endl;*/
 
 		// 바이트 단위로 내용 출력
-		const unsigned char* bytes = reinterpret_cast<const unsigned char*>(&cBufferData);
-		cout << "Bytes to copy: ";
-		for (size_t i = 0; i < sizeof(T); ++i) {
-			printf("%02X ", bytes[i]);
-		}
-		cout << endl;
+		//const unsigned char* bytes = reinterpret_cast<const unsigned char*>(&cBufferData);
+		//cout << "Bytes to copy: ";
+		//for (size_t i = 0; i < sizeof(T); ++i) {
+		//	printf("%02X ", bytes[i]);
+		//}
+		//cout << endl;
 
-		memcpy(ms.pData, &cBufferData, sizeof(T));
+		UINT size = sizeof(T);
+		UINT size2 = sizeof(cBufferData);
+		memcpy(ms.pData, &cBufferData, sizeof(cBufferData));
 		context->Unmap(cBuffer.Get(), NULL);
 		if (FAILED(hr))
 		{

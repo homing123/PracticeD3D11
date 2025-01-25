@@ -16,6 +16,9 @@
     <Filter Include="hlsl">
       <UniqueIdentifier>{71aab871-bb79-47bd-9d3a-569a5a94804e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\Materials">
+      <UniqueIdentifier>{e9ece053-96e4-41a6-9af4-122912fb6897}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp">
@@ -66,7 +69,7 @@
     <ClCompile Include="Light.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="MaterialCBuffer.cpp">
+    <ClCompile Include="MaterialKey.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -137,8 +140,20 @@
     <ClInclude Include="Light.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="MaterialCBuffer.h">
-      <Filter>헤더 파일</Filter>
+    <ClInclude Include="BillboardPointImageMaterial.h">
+      <Filter>헤더 파일\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="BlinnPhongMaterial.h">
+      <Filter>헤더 파일\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="MousePickingMaterial.h">
+      <Filter>헤더 파일\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyboxMaterial.h">
+      <Filter>헤더 파일\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="IBLMaterial.h">
+      <Filter>헤더 파일\Materials</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,11 @@
 #pragma once
 
 #include "GraphicsPSO.h"
+#include "BlinnPhongMaterial.h"
+#include "IBLMaterial.h"
+#include "MousePickingMaterial.h"
+#include "SkyboxMaterial.h"
+#include "BillboardPointImageMaterial.h"
 
 namespace Graphics
 {
@@ -36,12 +41,12 @@ namespace Graphics
 	extern ComPtr<ID3D11PixelShader> MousePickingPS;
 	extern ComPtr<ID3D11PixelShader> BillboardPointImagePS;
 
-	extern Material BlinnPhongMat_0;
-	extern Material BlinnPhongMat_1;
-	extern Material IBLMat;
-	extern Material SkyboxMat;
-	extern Material MousePickingMat;
-	extern Material BillboardPointImageMat;
+	extern BlinnPhongMaterial BlinnPhongMat_0;
+	extern BlinnPhongMaterial BlinnPhongMat_1;
+	extern IBLMaterial IBLMat;
+	extern SkyboxMaterial SkyboxMat;
+	extern MousePickingMaterial MousePickingMat;
+	extern BillboardPointImageMaterial BillboardPointImageMat;
 
 	extern GraphicsPSO BlinnPhongPSO_0;
 	extern GraphicsPSO BlinnPhongPSO_1;

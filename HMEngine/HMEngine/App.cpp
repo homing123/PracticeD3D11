@@ -277,14 +277,14 @@ void App::Render()
 	//IBLTexture
 	
 	//SkyBox
-	//m_Skybox->Render(m_Context);
+	m_Skybox->Render(m_Context);
 
 	//GameObjects
 	UINT objCount = m_Objs.size();
 	for (int i = 0; i < objCount; i++)
 	{
 		GameObject* pGO = m_Objs[i].get();
-		//pGO->Render(m_Context);
+		pGO->Render(m_Context);
 	}
 
 	//post effect
