@@ -37,7 +37,7 @@ void App::Start()
 	CreateLight(new DirectionalLight(m_Device, Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(1, 1, 1)));
 	CreateLight(new DirectionalLight(m_Device, Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(1, 1, 1)));
 	CreateLight(new PointLight(m_Device, Vector3(0, 0, 0), Vector3(1, 1, 1), 0.1f, 1));
-	CreateLight(new PointLight(m_Device, Vector3(0, 0, 0), Vector3(1, 1, 1), 0.1f, 1));
+	CreateLight(new PointLight(m_Device, Vector3(0, 2, 0), Vector3(1, 1, 1), 0.1f, 5));
 	CreateLight(new SpotLight(m_Device, Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(1, 1, 1), 0.1f, 1.0f, 10));
 	CreateLight(new SpotLight(m_Device, Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(1, 1, 1), 0.1f, 1.0f, 10));
 
@@ -250,10 +250,12 @@ void App::Render()
 	//Update LightCBuffer
 	int lightCount = m_Lights.size();
 	vector<Light*> vLightSort; //후에 빛의갯수가 많아지고 필드가 넓어지면 영향정도를 계산해서 갯수컷 해야함
-	vLightSort.resize(lightCount);
 	for (int i = 0; i < lightCount; i++)
 	{
-		vLightSort[i] = m_Lights[i].get();
+		if (m_Lights[i].get()->m_Active) 
+		{
+			vLightSort.push_back(m_Lights[i].get());
+		}
 	}
 	sort(vLightSort.begin(), vLightSort.end(), Light::CompareLightType);
 	int loopCount = lightCount > MAX_LIGHTS ? MAX_LIGHTS : lightCount;
@@ -261,7 +263,8 @@ void App::Render()
 	{
 		vLightSort[i]->SetLightCBuffer(m_LightCBufferCPU.lights[i]);
 	}
-	m_Context->PSGetConstantBuffers(LIGHT_CBUFFER_SLOT, 1, m_LightCBufferGPU.GetAddressOf());
+	D3DUtil::UpdateCBuffer(m_Context, m_LightCBufferCPU, m_LightCBufferGPU);
+	m_Context->PSSetConstantBuffers(LIGHT_CBUFFER_SLOT, 1, m_LightCBufferGPU.GetAddressOf());
 
 
 	//clear rtv, dsv

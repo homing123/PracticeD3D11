@@ -6,6 +6,7 @@
 class Light
 {
 public:
+	bool m_Active = true;
 	Light(ComPtr<ID3D11Device>& device, Vector3& position, Vector3& strength, const E_LightType type);
 	static bool CompareLightType(Light* a, Light* b);
 	const E_LightType GetLightType()const;

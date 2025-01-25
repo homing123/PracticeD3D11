@@ -53,8 +53,9 @@ void DirectionalLight::SetLightCBuffer(LightInfo& lightInfo)
 void DirectionalLight::DrawGui(ComPtr<ID3D11DeviceContext>& context)
 {
 	ImGui::Text("Directional Light");
+	ImGui::Checkbox("Active", &m_Active);
 	m_Transform->DrawGui();
-	ImGui::DragFloat("Strength", &m_Strength.x, 0.05f, 0.0f);
+	ImGui::DragFloat3("Strength", &m_Strength.x, 0.05f, 0.0f);
 }
 
 
@@ -77,8 +78,9 @@ void PointLight::SetLightCBuffer(LightInfo& lightInfo)
 void PointLight::DrawGui(ComPtr<ID3D11DeviceContext>& context)
 {
 	ImGui::Text("Point Light");
+	ImGui::Checkbox("Active", &m_Active);
 	m_Transform->DrawGui();
-	ImGui::DragFloat("Strength", &m_Strength.x, 0.05f, 0.0f);
+	ImGui::DragFloat3("Strength", &m_Strength.x, 0.05f, 0.0f);
 	ImGui::DragFloat("FallOffStart", &m_FallOffStart, 0.05f, 0.0f);
 	ImGui::DragFloat("FallOffEnd", &m_FallOffEnd, 0.05f, 0.0f);
 }
@@ -108,8 +110,9 @@ void SpotLight::SetLightCBuffer(LightInfo& lightInfo)
 void SpotLight::DrawGui(ComPtr<ID3D11DeviceContext>& context)
 {
 	ImGui::Text("Point Light");
+	ImGui::Checkbox("Active", &m_Active);
 	m_Transform->DrawGui();
-	ImGui::DragFloat("Strength", &m_Strength.x, 0.05f, 0.0f);
+	ImGui::DragFloat3("Strength", &m_Strength.x, 0.05f, 0.0f);
 	ImGui::DragFloat("FallOffStart", &m_FallOffStart, 0.05f, 0.0f);
 	ImGui::DragFloat("FallOffEnd", &m_FallOffEnd, 0.05f, 0.0f);
 	ImGui::DragFloat("SpotPower", &m_SpotPower, 0.05f, 0.0f);
