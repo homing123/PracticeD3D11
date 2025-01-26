@@ -260,6 +260,7 @@ void App::Render()
 	int activeLightCount = vLightSort.size();
 	sort(vLightSort.begin(), vLightSort.end(), Light::CompareLightType);
 	int loopCount = activeLightCount > MAX_LIGHTS ? MAX_LIGHTS : activeLightCount;
+	m_LightCBufferCPU.Init();
 	for (int i = 0; i < loopCount; i++)
 	{
 		vLightSort[i]->SetLightCBuffer(m_LightCBufferCPU.lights[i]);

@@ -36,6 +36,12 @@ struct LightInfo
 __declspec(align(256)) struct LightCBuffer // b12
 {
 	LightInfo lights[MAX_LIGHTS];
+	void Init() {
+		for (int i = 0; i < MAX_LIGHTS; i++)
+		{
+			lights[i].LightType = None;
+		}
+	}
 };
 __declspec(align(256)) struct GlobalCBuffer //b10
 {
