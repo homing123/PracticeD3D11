@@ -7,7 +7,7 @@ class Light
 {
 public:
 	bool m_Active = true;
-	Light(ComPtr<ID3D11Device>& device, Vector3& position, Vector3& strength, const E_LightType type);
+	Light(ComPtr<ID3D11Device>& device, const Vector3& position, const Vector3& color, const float intensity, const E_LightType type);
 	static bool CompareLightType(Light* a, Light* b);
 	const E_LightType GetLightType()const;
 	void Render(ComPtr<ID3D11DeviceContext>& context);
@@ -17,7 +17,8 @@ public:
 	virtual void SetLightCBuffer(LightInfo& lightInfo);
 	virtual void DrawGui(ComPtr<ID3D11DeviceContext>& context);
 public:
-	Vector3 m_Strength;
+	Vector3 m_Color;
+	float m_Intensity;
 	
 protected:
 	shared_ptr<Transform> m_Transform;
@@ -34,7 +35,7 @@ private:
 class DirectionalLight : public Light
 {
 public:
-	DirectionalLight(ComPtr<ID3D11Device>& device, Vector3 position, Vector3 euler, Vector3 strength);
+	DirectionalLight(ComPtr<ID3D11Device>& device, const Vector3& position, const Vector3& euler, const Vector3& color, const float intensity);
 
 	void SetLightCBuffer(LightInfo& lightInfo);
 	void DrawGui(ComPtr<ID3D11DeviceContext>& context);
@@ -44,7 +45,7 @@ private:
 class PointLight : public Light
 {
 public:
-	PointLight(ComPtr<ID3D11Device>& device, Vector3 position, Vector3 strength, float fallOffStart, float fallOffEnd);
+	PointLight(ComPtr<ID3D11Device>& device, const Vector3& position, const Vector3& color, const float intensity, const float fallOffStart, const float fallOffEnd);
 
 public:
 	float m_FallOffStart;
@@ -58,7 +59,7 @@ private:
 class SpotLight :public Light
 {
 public:
-	SpotLight(ComPtr<ID3D11Device>& device, Vector3 position, Vector3 euler, Vector3 strength, float fallOffStart, float fallOffEnd, float spotPower);
+	SpotLight(ComPtr<ID3D11Device>& device, const Vector3& position, const Vector3& euler, const Vector3& color, const float intensity, const float fallOffStart, const float fallOffEnd, const float spotPower);
 
 public:
 	float m_FallOffStart;

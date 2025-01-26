@@ -34,12 +34,12 @@ void App::Start()
 	CreateObj("BlinnPhong_Sphere_0", "Sphere", &BlinnPhongPSO_0);
 
 	//light
-	CreateLight(new DirectionalLight(m_Device, Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(1, 1, 1)));
-	CreateLight(new DirectionalLight(m_Device, Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(1, 1, 1)));
-	CreateLight(new PointLight(m_Device, Vector3(0, 0, 0), Vector3(1, 1, 1), 0.1f, 1));
-	CreateLight(new PointLight(m_Device, Vector3(0, 2, 0), Vector3(1, 1, 1), 0.1f, 5));
-	CreateLight(new SpotLight(m_Device, Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(1, 1, 1), 0.1f, 1.0f, 10));
-	CreateLight(new SpotLight(m_Device, Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(1, 1, 1), 0.1f, 1.0f, 10));
+	CreateLight(new DirectionalLight(m_Device, Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(1, 1, 1), 1));
+	CreateLight(new DirectionalLight(m_Device, Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(1, 1, 1), 1));
+	CreateLight(new PointLight(m_Device, Vector3(0, 0, 0), Vector3(1, 1, 1), 1, 0.1f, 1));
+	CreateLight(new PointLight(m_Device, Vector3(0, 2, 0), Vector3(1, 1, 1), 1, 0.1f, 5));
+	CreateLight(new SpotLight(m_Device, Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(1, 1, 1), 1.0f, 0.1f, 1.0f, 10));
+	CreateLight(new SpotLight(m_Device, Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(1, 1, 1), 1.0f, 0.1f, 1.0f, 10));
 
 	//skybox
 	m_Skybox = new GameObject(m_Device, "Skybox", GetModel("Skybox"), &SkyboxPSO);

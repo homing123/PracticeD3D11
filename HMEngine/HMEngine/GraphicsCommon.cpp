@@ -174,6 +174,10 @@ void Graphics::InitShaders(ComPtr<ID3D11Device>& device)
 }
 void Graphics::InitMaterial(ComPtr<ID3D11Device>& device)
 {
+	BlinnPhongMat_0.SetVector3("ambient", Vector3(0.2f, 0.1f, 0.1f));
+	BlinnPhongMat_0.SetVector3("diffuse", Vector3(0.5f, 0.5f, 0.5f));
+	BlinnPhongMat_0.SetVector3("specular", Vector3(0.6f, 0.6f, 0.6f));
+	BlinnPhongMat_0.Setfloat("shininess", 15);
 	BlinnPhongMat_0.CreateCBuffer(device);
 	BlinnPhongMat_1.CreateCBuffer(device);
 	IBLMat.CreateCBuffer(device);

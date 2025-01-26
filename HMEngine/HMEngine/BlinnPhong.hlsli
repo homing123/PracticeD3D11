@@ -21,14 +21,14 @@ float3 BlinnPhong(float3 lightStrength, float3 lightDir, float3 normal, float3 v
 	float3 halfDir = normalize(lightDir + viewDir);
 	float ndoth = max(0, dot(halfDir, normal));
 	float3 specular = pow(ndoth, mat.shininess) * mat.specular;
-	return mat.ambient + (mat.diffuse + specular) * lightStrength;
+	return (mat.diffuse + specular) * lightStrength;
 }
 float3 ComputeDirectionalLight(Light light, BlinnPhongMaterial mat, float3 normal, float3 viewDir)
 {
 	float3 lightDir = -light.direction;
 	float3 lightStrength = max(0, dot(normal, lightDir)) * light.strength;
 
-	return BlinnPhong(lightStrength, lightDir, normal, viewDir, mat);
+	return mat.ambient + BlinnPhong(lightStrength, lightDir, normal, viewDir, mat);
 }
 
 float CalcAttenuation(float d, float fallOffStart, float fallOffEnd)
